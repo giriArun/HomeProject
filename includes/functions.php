@@ -1,7 +1,8 @@
 <?php
     require_once 'controllers/login_service.php';
+    require_once 'controllers/access_service.php';
 
-    $timeout = (int) (getenv('TIMEOUT') ?: 300); // 5 minutes
+    $timeout = (int) (getenv('TIMEOUT') ?: 1000); // 5 minutes
     $action = isset($_GET['action']) ? $_GET['action'] : '';
     $_SESSION['brand_name'] = isset($_GET['BRAND_NAME']) ? $_GET['BRAND_NAME'] : 'Digital Home';
 
@@ -20,13 +21,19 @@
             
             $action = 'login';
         } else {
+            $_SESSION['login_time'] = time();
+
             if( array_search( $action ,['login', 'login_submit'] ) ){
                 $action = 'dashboard';
             }
 
-            //check is user is valid and has admin access for dashboard
-            
+            // dashboard and logout actions are allowed for all logged in users.
 
+
+            //check is user is valid and has admin access for dashboard
+            $accessService = new AccessService($conn);
+            $userPermissions = $accessService->verifyUserPermissions($_SESSION['user_id'], $action);
+            print_r($userPermissions);
         }
     }
 
@@ -58,16 +65,22 @@
 
         case 'logout':
             // clear session and redirect to login
-            session_unset();
+            //session_unset();
             session_destroy();
 
             $action = 'login';
+            break;
+
+        case 'users':
+            break;
+
         default:
             $action = 'dashboard';
     }
 
-    //print_r($_SESSION);
+    
     //print_r($result);
 
     $_SESSION['action'] = $action;
+    //print_r($_SESSION);
 ?>

@@ -1,3 +1,4 @@
+<?php $currentAction = $_SESSION['action'] ?? 'dashboard'; ?>
 <aside class="sidebar d-flex flex-column" id="sidebar">
     <div class="sidebar-mobile-top d-lg-none">
         <button class="sidebar-close btn btn-link text-white p-0" type="button" aria-label="Close navigation" data-sidebar-close>
@@ -14,10 +15,10 @@
         </div>
 
         <nav class="nav flex-column nav-pills gap-2 mt-4">
-            <a class="nav-link active" href="#"><i class="bi bi-grid"></i><span>Dashboard</span></a>
+            <a class="nav-link <?= $currentAction === 'dashboard' ? 'active' : '' ?>" href="?action=dashboard"><i class="bi bi-grid"></i><span>Dashboard</span></a>
             <a class="nav-link" href="#"><i class="bi bi-graph-up-arrow"></i><span>Analytics</span></a>
             <a class="nav-link" href="#"><i class="bi bi-kanban"></i><span>Projects</span></a>
-            <a class="nav-link" href="#"><i class="bi bi-people"></i><span>Users</span></a>
+            <a class="nav-link <?= in_array($currentAction, ['users', 'user_form'], true) ? 'active' : '' ?>" href="?action=users"><i class="bi bi-people"></i><span>Users</span></a>
             <a class="nav-link" href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
             <a class="nav-link" href="?action=logout"><i class="bi bi-lock"></i><span>Logout</span></a>
         </nav>
