@@ -1,5 +1,7 @@
 <?php include 'includes/db_connect.php'; ?>
 
+<?php include 'includes/functions.php'; ?>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pulse Admin</title>

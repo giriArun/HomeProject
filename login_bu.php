@@ -1,6 +1,18 @@
 <?php
+require_once 'includes/db_connect.php';
+
 $loginError = '';
 $submittedEmail = '';
+$users = [];
+
+// Fetch all users from database
+$query = "SELECT user_email, user_name FROM users WHERE is_active = 1 ORDER BY user_name ASC";
+$result = mysqli_query($conn, $query);
+if ($result) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $users[] = $row;
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $submittedEmail = trim($_POST['email'] ?? '');

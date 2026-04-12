@@ -19,6 +19,7 @@
             <a class="nav-link" href="#"><i class="bi bi-kanban"></i><span>Projects</span></a>
             <a class="nav-link" href="#"><i class="bi bi-people"></i><span>Users</span></a>
             <a class="nav-link" href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
+            <a class="nav-link" href="?action=logout"><i class="bi bi-lock"></i><span>Logout</span></a>
         </nav>
     </div>
 

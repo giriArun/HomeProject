@@ -56,6 +56,8 @@ function progressTone(int $progress): string
 
     return 'warning';
 }
+
+    session_start();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,6 +71,13 @@ function progressTone(int $progress): string
 
 
         <main class="main-content">
+
+            <?php
+                if (isset($_SESSION['action']) && $_SESSION['action'] === 'login') {
+                    include 'pages/login.php';
+                    exit;
+                }
+            ?>
             <header class="mobile-topbar d-lg-none">
                 <button class="menu-toggle btn btn-dark" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false" data-sidebar-toggle>
                     <i class="bi bi-list"></i>
