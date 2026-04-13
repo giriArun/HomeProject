@@ -86,14 +86,18 @@ function progressTone(int $progress): string
                         case 'login':
                             include 'pages/login.php';
                             break;
+                        case 'logout':
+                            /* session_unset();
+                            session_destroy();
+                            header('Location: index.php'); */
+                            exit;
                         case 'users':
                             include 'pages/users.php';
                             break;
-                        case 'logout':
-                            session_unset();
-                            session_destroy();
-                            header('Location: index.php');
-                            exit;
+                        case 'user_access':
+                            include 'pages/user_access.php';
+                            break;
+
                         default:
                             ?>
 

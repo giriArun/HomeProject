@@ -20,7 +20,7 @@ final class AccessService
         $statement = mysqli_prepare($this->connection, $sql);
 
         if (!$statement) {
-            return null;
+            return 'logout';
         }
 
         mysqli_stmt_bind_param($statement, 'i', $user_id);
@@ -48,13 +48,32 @@ final class AccessService
                 return $action;
             } else {
 
-               // print_r( in_array($action, ['users', 'user_form'], true) );
-                //exit;
+               $sql = 'SELECT *
+                FROM user_meta
+                WHERE user_id = ?
+                AND meta_key = ?';
 
-                return 'admin';
+                $statement = mysqli_prepare($this->connection, $sql);
+
+                if (!$statement) {
+                    return 'logout';
+                }
+
+                mysqli_stmt_bind_param($statement, 'is', $user_id, $action);
+                mysqli_stmt_execute($statement);
+
+                $result = mysqli_stmt_get_result($statement);
+                $user_permission = $result ? mysqli_fetch_all($result, MYSQLI_ASSOC) : null;
+
+                mysqli_stmt_close($statement);
+                if( count($user_permission) > 0 && $user_permission[0]['meta_value'] === '1' ){
+                    return $action;
+                } else {
+                    return 'logout';
+                }
             }
         } else {
-            return 'dashboard';
+            return 'logout';
         }
 
     }

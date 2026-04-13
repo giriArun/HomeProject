@@ -2,10 +2,10 @@
 <section class="auth-panel">
     <div class="auth-card">
         <div class="auth-card-header">
-            <span class="brand-mark"><?= htmlspecialchars($_SESSION['brand_name'])[0] ?></span>
+            <span class="brand-mark"><?= htmlspecialchars($brand_name)[0] ?></span>
             <div>
                 <p class="auth-overline">Welcome back</p>
-                <h2>Sign in to <?= htmlspecialchars($_SESSION['brand_name']) ?></h2>
+                <h2>Sign in to <?= htmlspecialchars($brand_name) ?></h2>
             </div>
         </div>
 

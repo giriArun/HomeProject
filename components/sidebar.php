@@ -7,18 +7,19 @@
     </div>
     <div>
         <div class="brand">
-            <span class="brand-mark">P</span>
+            <span class="brand-mark"><?= htmlspecialchars($_SESSION['user_name'] ?? $brand_name)[0] ?></span>
             <div>
-                <h1 class="brand-title">Pulse Admin</h1>
+                <h1 class="brand-title"><?= htmlspecialchars($_SESSION['user_name'] ?? $brand_name) ?></h1>
                 <p class="brand-subtitle">Operations dashboard</p>
             </div>
         </div>
 
         <nav class="nav flex-column nav-pills gap-2 mt-4">
             <a class="nav-link <?= $currentAction === 'dashboard' ? 'active' : '' ?>" href="?action=dashboard"><i class="bi bi-grid"></i><span>Dashboard</span></a>
+            <a class="nav-link" href="#"><i class="bi bi-calendar3"></i><span>Daily Report</span></a>
             <a class="nav-link" href="#"><i class="bi bi-graph-up-arrow"></i><span>Analytics</span></a>
             <a class="nav-link" href="#"><i class="bi bi-kanban"></i><span>Projects</span></a>
-            <a class="nav-link <?= in_array($currentAction, ['users', 'user_form'], true) ? 'active' : '' ?>" href="?action=users"><i class="bi bi-people"></i><span>Users</span></a>
+            <a class="nav-link <?= in_array($currentAction, ['users', 'add_edit_user', 'user_access'], true) ? 'active' : '' ?>" href="?action=users"><i class="bi bi-people"></i><span>Users</span></a>
             <a class="nav-link" href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
             <a class="nav-link" href="?action=logout"><i class="bi bi-lock"></i><span>Logout</span></a>
         </nav>

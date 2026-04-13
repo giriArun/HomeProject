@@ -1,10 +1,11 @@
 <?php
     require_once 'controllers/login_service.php';
     require_once 'controllers/access_service.php';
+    require_once 'controllers/user_service.php';
 
     $timeout = (int) (getenv('TIMEOUT') ?: 1000); // 5 minutes
     $action = isset($_GET['action']) ? $_GET['action'] : '';
-    $_SESSION['brand_name'] = isset($_GET['BRAND_NAME']) ? $_GET['BRAND_NAME'] : 'Digital Home';
+    $brand_name = isset($_GET['BRAND_NAME']) ? $_GET['BRAND_NAME'] : 'Digital Home';
 
 
 
@@ -32,8 +33,8 @@
 
             //check is user is valid and has admin access for dashboard
             $accessService = new AccessService($conn);
-            $userPermissions = $accessService->verifyUserPermissions($_SESSION['user_id'], $action);
-            print_r($userPermissions);
+            $action = $accessService->verifyUserPermissions($_SESSION['user_id'], $action);
+            print_r($action);
         }
     }
 
@@ -65,13 +66,48 @@
 
         case 'logout':
             // clear session and redirect to login
-            //session_unset();
+            session_unset();
             session_destroy();
 
             $action = 'login';
+            $loginService = new LoginService($conn);
+            $result['users'] = $loginService->getAllUsers();
+            $loginError = '';
+            
             break;
 
         case 'users':
+            $userService = new UserService($conn);
+            $result['users'] = $userService->getAllUsers();
+            break;
+
+        case 'add_edit_user':
+            $userService = new UserService($conn);
+            $result['user'] = $userService->getUserById($_GET['id'] ?? null);
+            print_r($result);
+            exit;
+            break;
+
+        case 'user_access':
+            $userService = new UserService($conn);
+            $result['user'] = $userService->getUserById($_GET['user_id'] ?? null);
+            $result['permissions'] = $userService->getUserPermissions($_GET['user_id'] ?? null);
+
+            break;
+        
+        case 'user_access_submit':
+            $userService = new UserService($conn);
+            $result = $userService->updateUserPermissions($_POST);
+
+            if ($result['success']) {
+                $userSuccess = $result['message'];
+            } else {
+                $userError = $result['message'];
+            }
+
+            $result['users'] = $userService->getAllUsers();
+            $action = 'users';
+
             break;
 
         default:
