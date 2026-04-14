@@ -2,10 +2,10 @@
 <section class="auth-panel">
     <div class="auth-card">
         <div class="auth-card-header">
-            <span class="brand-mark"><?= htmlspecialchars($brand_name)[0] ?></span>
+            <span class="brand-mark"><?= htmlspecialchars(ucfirst($brand_name))[0] ?></span>
             <div>
                 <p class="auth-overline">Welcome back</p>
-                <h2>Sign in to <?= htmlspecialchars($brand_name) ?></h2>
+                <h2>Sign in to <?= htmlspecialchars(ucwords($brand_name)) ?></h2>
             </div>
         </div>
 
@@ -61,7 +61,7 @@
                 <span class="auth-form-note">Protected workspace</span>
             </div>
 
-            <button type="submit" class="btn btn-dark auth-submit">Sign In</button>
+            <button type="submit" class="btn btn-dark auth-submit">Login</button>
         </form>
 
         <p class="auth-footer">

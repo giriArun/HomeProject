@@ -6,6 +6,7 @@
     $timeout = (int) (getenv('TIMEOUT') ?: 1000); // 5 minutes
     $action = isset($_GET['action']) ? $_GET['action'] : '';
     $brand_name = isset($_GET['BRAND_NAME']) ? $_GET['BRAND_NAME'] : 'Digital Home';
+    $user_is_admin = isset($_SESSION['user_admin']) ? (int) $_SESSION['user_admin'] : 0;
 
 
 
@@ -54,6 +55,10 @@
                 $_SESSION['user_name'] = $result['user']['user_name'];
                 $_SESSION['user_admin'] = $result['user']['is_admin'];
                 $_SESSION['login_time'] = time();
+
+                $accessService = new AccessService($conn);
+                $allPermissions = $accessService->getUserAllPermissions($result['user']['user_id']);
+                $_SESSION['permissions'] = array_column($allPermissions, 'meta_key');
 
                 $action = 'dashboard';
             } else {
@@ -118,5 +123,5 @@
     //print_r($result);
 
     $_SESSION['action'] = $action;
-    //print_r($_SESSION);
+    print_r($_SESSION);
 ?>

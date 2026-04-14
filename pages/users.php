@@ -58,15 +58,23 @@ $editUser = $users[0];
                                 <td><span class="badge text-bg-<?= $tone ?>"><?= $isActive ? 'Active' : 'Inactive' ?></span></td>
                                 <td class="text-secondary small"><?= htmlspecialchars((string) ($user['modified'] ?? 'N/A')) ?></td>
                                 <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-primary m-1" data-bs-toggle="modal" data-bs-target="#editUserModal">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </button>
-                                    <a type="button" class="btn btn-sm btn-outline-primary m-1" href="?action=user_access&user_id=<?= (int) ($user['user_id'] ?? 0) ?>">
-                                        <i class="bi bi-universal-access-circle"></i> Access
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </button>
+                                    <?php if ($user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('add_edit_user', $_SESSION['permissions']) && !$isAdmin)): ?> 
+                                        <button type="button" class="btn btn-sm btn-outline-primary m-1" data-bs-toggle="modal" data-bs-target="#editUserModal">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                    <?php endif; ?>
+
+                                    <?php if (($user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('user_access', $_SESSION['permissions']))) && !$isAdmin): ?>
+                                        <a type="button" class="btn btn-sm btn-outline-primary m-1" href="?action=user_access&user_id=<?= (int) ($user['user_id'] ?? 0) ?>">
+                                            <i class="bi bi-universal-access-circle"></i> Access
+                                        </a>
+                                    <?php endif; ?>
+
+                                    <?php if ($user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('user_delete', $_SESSION['permissions']) && !$isAdmin)): ?>
+                                        <button type="button" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

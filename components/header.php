@@ -4,15 +4,15 @@
     </button>
     <div>
         <p class="mobile-topbar-label">Workspace</p>
-        <h1 class="mobile-topbar-title">Pulse Admin</h1>
+        <h1 class="mobile-topbar-title"><?= htmlspecialchars(ucwords($_SESSION['user_name'] ?? $brand_name)) ?></h1>
     </div>
-    <div class="mobile-topbar-avatar">MO</div>
+    <div class="mobile-topbar-avatar"><?= htmlspecialchars(ucfirst($_SESSION['user_name'] ?? $brand_name))[0] ?></div>
 </header>
 
 <header class="topbar">
     <div>
         <p class="eyebrow">Overview</p>
-        <h2 class="page-title">Welcome back, Morgan</h2>
+        <h2 class="page-title">Welcome back, <?= htmlspecialchars(ucwords($_SESSION['user_name'] ?? $brand_name)) ?></h2>
         <p class="page-copy">Here’s what’s happening across your business today.</p>
     </div>
 

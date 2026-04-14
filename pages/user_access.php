@@ -21,7 +21,7 @@
                                         $user_permission = [
                                             ['title' => 'User List', 'key' => 'users', 'value' => ['users']],
                                             ['title' => 'Edit User Access', 'key' => 'user_access', 'value' => ['user_access', 'user_access_submit']],
-                                            ['title' => 'Edit User', 'key' => 'marketing', 'value' => ['marketing']],
+                                            ['title' => 'Edit User', 'key' => 'add_edit_user', 'value' => ['add_edit_user']],
                                             ['title' => 'Delete User', 'key' => 'user_delete', 'value' => ['user_delete']],
                                         ];
 
