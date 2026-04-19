@@ -19,10 +19,15 @@
             <a class="nav-link <?= $currentAction === 'dashboard' ? 'active' : '' ?>" href="?action=dashboard"><i class="bi bi-grid"></i><span>Dashboard</span></a>
             <a class="nav-link" href="#"><i class="bi bi-calendar3"></i><span>Daily Report</span></a>
             <a class="nav-link" href="#"><i class="bi bi-graph-up-arrow"></i><span>Analytics</span></a>
-            <a class="nav-link" href="#"><i class="bi bi-kanban"></i><span>Projects</span></a>
+
+            <?php if ( $user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('projects', $_SESSION['permissions']))): ?>
+                <a class="nav-link <?= in_array($currentAction, ['projects', 'add_edit_project'], true) ? 'active' : '' ?>" href="?action=projects"><i class="bi bi-kanban"></i><span>Projects</span></a>
+            <?php endif; ?>
+
             <?php if ( $user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('users', $_SESSION['permissions'])) ): ?>
                 <a class="nav-link <?= in_array($currentAction, ['users', 'add_edit_user', 'user_access'], true) ? 'active' : '' ?>" href="?action=users"><i class="bi bi-people"></i><span>Users</span></a>
             <?php endif; ?>
+
             <?php /* if (isset($_SESSION['permissions']) && in_array('settings', $_SESSION['permissions'])): */ ?>
                 <a class="nav-link" href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
             <?php /* endif; */ ?>

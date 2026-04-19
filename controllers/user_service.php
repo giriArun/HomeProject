@@ -371,6 +371,7 @@ final class UserService
             ];
         }
 
+        /* Process user permissions */
         if (isset($formData['user_permission']) && is_string($formData['user_permission'])) {
 
             $user_permissions = json_decode($formData['user_permission'], true);
@@ -394,66 +395,45 @@ final class UserService
 
                 $is_access_granted = (isset($formData[$permission_key]) && $formData[$permission_key] === 'on') ? 1 : 0;
 
-                // Check if permission record exists
-                $checkSql = 'SELECT * FROM user_meta WHERE user_id = ? AND meta_key = ? LIMIT 1';
-                $checkStatement = mysqli_prepare($this->connection, $checkSql);
+                foreach ($permission_values as $single_permission_key) {
+                    // Process the single permission
+                    $result = $this->processSinglePermission($user_id, $single_permission_key, $is_access_granted);
+                    if (!$result['success']) {
+                        return $result;
+                    }
+                }
+            }
+        }
 
-                if (!$checkStatement) {
-                    return [
-                        'success' => false,
-                        'message' => 'Failed to prepare check statement.',
-                    ];
+        /* Process project permissions */
+        if (isset($formData['project_permission']) && is_string($formData['project_permission'])) {
+
+            $project_permissions = json_decode($formData['project_permission'], true);
+
+            // Validate that the decoded permissions is an array
+            if (!is_array($project_permissions)) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid permissions data.',
+                ];
+            }
+
+            // Process permissions as needed
+            foreach ($project_permissions as $permission) {
+                $permission_key = $permission['key'] ?? null;
+                $permission_values = $permission['value'] ?? [];
+
+                if ($permission_key === null || !is_array($permission_values)) {
+                    continue;
                 }
 
-                mysqli_stmt_bind_param($checkStatement, 'is', $user_id, $permission_key);
-                mysqli_stmt_execute($checkStatement);
-                $result = mysqli_stmt_get_result($checkStatement);
-                $exists = $result ? mysqli_num_rows($result) > 0 : false;
-                mysqli_stmt_close($checkStatement);
+                $is_access_granted = (isset($formData[$permission_key]) && $formData[$permission_key] === 'on') ? 1 : 0;
 
-                if ($exists) {
-                    // UPDATE
-                    $updateSql = 'UPDATE user_meta SET meta_value = ? WHERE user_id = ? AND meta_key = ?';
-                    $updateStatement = mysqli_prepare($this->connection, $updateSql);
-
-                    if (!$updateStatement) {
-                        return [
-                            'success' => false,
-                            'message' => 'Failed to prepare update statement.',
-                        ];
-                    }
-
-                    mysqli_stmt_bind_param($updateStatement, 'iis', $is_access_granted, $user_id, $permission_key);
-                    $ok = mysqli_stmt_execute($updateStatement);
-                    mysqli_stmt_close($updateStatement);
-
-                    if (!$ok) {
-                        return [
-                            'success' => false,
-                            'message' => 'Failed to update permission.',
-                        ];
-                    }
-                } else {
-                    // INSERT
-                    $insertSql = 'INSERT INTO user_meta (user_id, meta_key, meta_value) VALUES (?, ?, ?)';
-                    $insertStatement = mysqli_prepare($this->connection, $insertSql);
-
-                    if (!$insertStatement) {
-                        return [
-                            'success' => false,
-                            'message' => 'Failed to prepare insert statement.',
-                        ];
-                    }
-
-                    mysqli_stmt_bind_param($insertStatement, 'isi', $user_id, $permission_key, $is_access_granted);
-                    $ok = mysqli_stmt_execute($insertStatement);
-                    mysqli_stmt_close($insertStatement);
-
-                    if (!$ok) {
-                        return [
-                            'success' => false,
-                            'message' => 'Failed to insert permission.',
-                        ];
+                foreach ($permission_values as $single_permission_key) {
+                    // Process the single permission
+                    $result = $this->processSinglePermission($user_id, $single_permission_key, $is_access_granted);
+                    if (!$result['success']) {
+                        return $result;
                     }
                 }
             }
@@ -571,5 +551,76 @@ final class UserService
         mysqli_stmt_close($statement);
 
         return $exists;
+    }
+
+    private function processSinglePermission(int $user_id, string $permission_key, int $is_access_granted): array
+    {
+        // Check if permission record exists
+        $checkSql = 'SELECT * FROM user_meta WHERE user_id = ? AND meta_key = ? LIMIT 1';
+        $checkStatement = mysqli_prepare($this->connection, $checkSql);
+
+        if (!$checkStatement) {
+            return [
+                'success' => false,
+                'message' => 'Failed to prepare check statement.',
+            ];
+        }
+
+        mysqli_stmt_bind_param($checkStatement, 'is', $user_id, $permission_key);
+        mysqli_stmt_execute($checkStatement);
+        $result = mysqli_stmt_get_result($checkStatement);
+        $exists = $result ? mysqli_num_rows($result) > 0 : false;
+        mysqli_stmt_close($checkStatement);
+
+        if ($exists) {
+            // UPDATE
+            $updateSql = 'UPDATE user_meta SET meta_value = ? WHERE user_id = ? AND meta_key = ?';
+            $updateStatement = mysqli_prepare($this->connection, $updateSql);
+
+            if (!$updateStatement) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to prepare update statement.',
+                ];
+            }
+
+            mysqli_stmt_bind_param($updateStatement, 'iis', $is_access_granted, $user_id, $permission_key);
+            $ok = mysqli_stmt_execute($updateStatement);
+            mysqli_stmt_close($updateStatement);
+
+            if (!$ok) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to update permission.',
+                ];
+            }
+        } else {
+            // INSERT
+            $insertSql = 'INSERT INTO user_meta (user_id, meta_key, meta_value) VALUES (?, ?, ?)';
+            $insertStatement = mysqli_prepare($this->connection, $insertSql);
+
+            if (!$insertStatement) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to prepare insert statement.',
+                ];
+            }
+
+            mysqli_stmt_bind_param($insertStatement, 'isi', $user_id, $permission_key, $is_access_granted);
+            $ok = mysqli_stmt_execute($insertStatement);
+            mysqli_stmt_close($insertStatement);
+
+            if (!$ok) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to insert permission.',
+                ];
+            }
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Permission processed successfully.',
+        ];
     }
 }

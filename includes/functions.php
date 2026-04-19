@@ -2,6 +2,7 @@
     require_once 'controllers/login_service.php';
     require_once 'controllers/access_service.php';
     require_once 'controllers/user_service.php';
+    require_once 'controllers/project_service.php';
 
     $timeout = (int) (getenv('TIMEOUT') ?: 1000); // 5 minutes
     $action = isset($_GET['action']) ? $_GET['action'] : '';
@@ -112,6 +113,62 @@
 
             $result['users'] = $userService->getAllUsers();
             $action = 'users';
+
+            break;
+
+        case 'projects':
+            $projectService = new ProjectService($conn);
+            $result['projects'] = $projectService->getAllProjects();
+
+            break;
+
+        case 'add_edit_project':
+            $projectService = new ProjectService($conn);
+            $result['project'] = $projectService->getProjectById($_GET['project_id'] ?? null);
+            break;
+
+        case 'add_edit_project_submit':
+            $projectService = new ProjectService($conn);
+            $projectId = isset($_POST['project_id']) ? (int) $_POST['project_id'] : 0;
+
+            if ($projectId > 0) {
+                $result = $projectService->updateProject($projectId, $_POST, $_SESSION['user_id'] ?? 0);
+                $action = 'add_edit_project';
+                $result['project'] = array_merge($_POST, ['project_id' => $projectId]);
+            } else {
+                $result = $projectService->createProject($_POST, $_SESSION['user_id'] ?? 0);
+                $action = 'add_edit_project';
+                $result['project'] = $_POST;
+            }
+
+            if ($result['success']) {
+                $projectSuccess = $result['message'];
+                $action = 'projects';
+                $result['projects'] = $projectService->getAllProjects();
+            } else {
+                $projectError = $result['message'];
+            }
+
+            break;
+
+        case 'project_delete':
+            $projectService = new ProjectService($conn);
+            $projectId = isset($_GET['project_id']) ? (int) $_GET['project_id'] : 0;
+
+            if ($projectId > 0) {
+                $result = $projectService->deleteProject($projectId);
+
+                if ($result['success']) {
+                    $projectSuccess = $result['message'];
+                } else {
+                    $projectError = $result['message'];
+                }
+            } else {
+                $projectError = 'Invalid project ID.';
+            }
+
+            $action = 'projects';
+            $result['projects'] = $projectService->getAllProjects();
 
             break;
 
