@@ -103,6 +103,9 @@ function progressTone(int $progress): string
                         case 'add_edit_project':
                             include 'pages/add_edit_project.php';
                             break;
+                        case 'add_edit_report':
+                            include 'pages/add_edit_report.php';
+                            break;
 
                         default:
                             ?>

@@ -1,19 +1,4 @@
 <?php
-$users = $result['users'] ?? [];
-
-
-//TODO: Remove this dummy data after database integration
-if (count($users) === 0) {
-    $users = [
-        ['user_id' => 1, 'user_name' => 'Morgan Lee', 'user_email' => 'morgan@pulseadmin.com', 'is_admin' => 1, 'is_active' => 1, 'modified' => '2026-04-12 09:20:00'],
-        ['user_id' => 2, 'user_name' => 'Ava Martinez', 'user_email' => 'ava@pulseadmin.com', 'is_admin' => 0, 'is_active' => 1, 'modified' => '2026-04-11 08:05:00'],
-        ['user_id' => 3, 'user_name' => 'Noah Wilson', 'user_email' => 'noah@pulseadmin.com', 'is_admin' => 0, 'is_active' => 0, 'modified' => '2026-04-10 18:12:00'],
-    ];
-}
-
-$editUser = $users[0];
-?>
-<?php
     $projects = $result['projects'] ?? null;
 ?>
 
@@ -65,6 +50,12 @@ $editUser = $users[0];
                                         </a>
                                     <?php endif; ?>
 
+                                    <?php if ($user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('update_project_tags', $_SESSION['permissions']))): ?> 
+                                        <button type="button" class="btn btn-sm btn-outline-primary m-1" data-bs-toggle="modal" data-bs-target="#editTagsModal" data-project-id="<?= (int) ($project['project_id'] ?? 0) ?>" data-project-tags='<?= htmlspecialchars($project['project_tags'] ?? '') ?>'>
+                                            <i class="bi bi-tags"></i> Tags
+                                        </button>
+                                    <?php endif; ?>
+
                                     <?php if (($user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('user_access', $_SESSION['permissions'])))): ?>
                                         <!-- <a type="button" class="btn btn-sm btn-outline-primary m-1" href="?action=user_access&user_id=<?= (int) ($user['user_id'] ?? 0) ?>">
                                             <i class="bi bi-universal-access-circle"></i> Access
@@ -85,8 +76,36 @@ $editUser = $users[0];
             </div>
 
             <div class="d-flex justify-content-between align-items-center mt-3">
-                <small class="text-secondary">Showing <?= count($users) ?> users</small>
+                <small class="text-secondary">Showing <?= count($projects) ?> projects</small>
             </div>
         </div>
     </article>
 </section>
+
+
+<div class="modal fade" id="editTagsModal" tabindex="-1" aria-labelledby="editTagsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post" action="?action=update_project_tags" class="needs-validation" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editTagsModalLabel">Edit Tags</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Tags</label>
+                                <textarea class="form-control" name="project_tags" rows="3" placeholder="Enter tags for this project"></textarea>
+                                <input type="hidden" name="project_id" value="0">
+                                <span class="form-text">Comma separated tags, for example: tag1, tag2, tag3</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-dark">Update Tags</button>
+                    </div>
+            </form>
+        </div>
+    </div>
+</div>

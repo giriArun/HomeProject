@@ -9,14 +9,48 @@
                 <input type="hidden" name="user_id" value="<?= $user['user_id'] ?? '' ?>">
                 <div class="row g-3">
                     <div class="accordion" id="accordionExample">
+                        <!-- Daily Report Access Permissions -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="dailyReportAccessHeading">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#dailyReportAccessCollapse" aria-expanded="true" aria-controls="dailyReportAccessCollapse">
+                                Daily Report Access Permissions
+                            </button>
+                            </h2>
+                            <div id="dailyReportAccessCollapse" class="accordion-collapse collapse show" aria-labelledby="dailyReportAccessHeading" data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    <?php
+                                        $daily_report_permission = [
+                                            ['title' => 'Add/Edit Daily Report', 'key' => 'add_edit_report', 'value' => ['add_edit_report', 'add_edit_report_submit']],
+                                        ];
+
+                                        foreach ($daily_report_permission as $permission):
+                                    ?>
+                                        <div class="form-check form-switch">
+                                            <?php
+                                                // Determine if the permission should be checked based on the user's current permissions
+                                                $isChecked = false;
+                                                if($permission['key'] === 'view_daily_reports') {
+                                                    $isChecked = true; // Assuming all users have access to view daily reports, adjust as needed
+                                                } else if(isset($permissions[$permission['key']]) && $permissions[$permission['key']] === '1') {
+                                                    $isChecked = true;
+                                                }
+                                            ?>
+                                            <input class="form-check-input" type="checkbox" role="switch" id="<?= $permission['key'] ?>" name="<?= $permission['key'] ?>" <?= $isChecked ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="<?= $permission['key'] ?>"><?= $permission['title'] ?></label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                    <input type="text" name="daily_report_permission" value='<?= json_encode($daily_report_permission) ?>'>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Project Access Permissions -->
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="projectAccessHeading">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#projectAccessCollapse" aria-expanded="true" aria-controls="projectAccessCollapse">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#projectAccessCollapse" aria-expanded="true" aria-controls="projectAccessCollapse">
                                 Project Access Permissions
                             </button>
                             </h2>
-                            <div id="projectAccessCollapse" class="accordion-collapse collapse show" aria-labelledby="projectAccessHeading" data-bs-parent="#accordionExample">
+                            <div id="projectAccessCollapse" class="accordion-collapse collapse" aria-labelledby="projectAccessHeading" data-bs-parent="#accordionExample">
                                 <div class="accordion-body">
                                     <?php
                                         $project_permission = [
@@ -24,6 +58,7 @@
                                             ['title' => 'Edit Project', 'key' => 'add_edit_project', 'value' => ['add_edit_project', 'add_edit_project_submit']],
                                             ['title' => 'Delete Project', 'key' => 'project_delete', 'value' => ['project_delete']],
                                             ['title' => 'Edit Project Access', 'key' => 'project_access', 'value' => ['project_access', 'project_access_submit']],
+                                            ['title' => 'Update Project Tags', 'key' => 'update_project_tags', 'value' => ['update_project_tags']],
                                         ];
 
                                         foreach ($project_permission as $permission):

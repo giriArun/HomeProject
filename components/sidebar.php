@@ -17,7 +17,11 @@
         <nav class="nav flex-column nav-pills gap-2 mt-4">
             <?php if (isset($_SESSION['user_id'])): ?>
             <a class="nav-link <?= $currentAction === 'dashboard' ? 'active' : '' ?>" href="?action=dashboard"><i class="bi bi-grid"></i><span>Dashboard</span></a>
-            <a class="nav-link" href="#"><i class="bi bi-calendar3"></i><span>Daily Report</span></a>
+
+            <?php if ( $user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('add_edit_report', $_SESSION['permissions']))): ?>
+                <a class="nav-link <?= in_array($currentAction, ['add_edit_report', 'add_edit_report_submit'], true) ? 'active' : '' ?>" href="?action=add_edit_report"><i class="bi bi-calendar3"></i><span>Daily Report</span></a>
+            <?php endif; ?>
+
             <a class="nav-link" href="#"><i class="bi bi-graph-up-arrow"></i><span>Analytics</span></a>
 
             <?php if ( $user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('projects', $_SESSION['permissions']))): ?>

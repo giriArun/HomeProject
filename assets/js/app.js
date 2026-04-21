@@ -5,6 +5,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleButton = document.querySelector('[data-sidebar-toggle]');
     const closeButtons = document.querySelectorAll('[data-sidebar-close]');
 
+    // Modal: Edit Tags - populate fields
+    const editTagsModal = document.getElementById('editTagsModal');
+    if (editTagsModal) {
+        editTagsModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+            const projectId = button.getAttribute('data-project-id');
+            const projectTags = button.getAttribute('data-project-tags');
+            const textarea = editTagsModal.querySelector('textarea');
+            const hiddenInput = editTagsModal.querySelector('input[name="project_id"]');
+            if (textarea) textarea.value = projectTags || '';
+            if (hiddenInput) hiddenInput.value = projectId || 0;
+        });
+    }
+
     const setSidebarState = (isOpen) => {
         if (!sidebar || !toggleButton) {
             return;

@@ -3,6 +3,7 @@
     require_once 'controllers/access_service.php';
     require_once 'controllers/user_service.php';
     require_once 'controllers/project_service.php';
+    require_once 'controllers/report_service.php';
 
     $timeout = (int) (getenv('TIMEOUT') ?: 1000); // 5 minutes
     $action = isset($_GET['action']) ? $_GET['action'] : '';
@@ -151,6 +152,27 @@
 
             break;
 
+        case 'update_project_tags':
+            $projectService = new ProjectService($conn);
+            $projectId = isset($_POST['project_id']) ? (int) $_POST['project_id'] : 0;
+
+            if ($projectId > 0) {
+                $result = $projectService->updateProjectTags($projectId, $_POST['project_tags'] ?? '', $_SESSION['user_id'] ?? 0);
+
+                if ($result['success']) {
+                    $projectSuccess = $result['message'];
+                } else {
+                    $projectError = $result['message'];
+                }
+            } else {
+                $projectError = 'Invalid project ID.';
+            }
+
+            $action = 'projects';
+            $result['projects'] = $projectService->getAllProjects();
+
+            break;
+
         case 'project_delete':
             $projectService = new ProjectService($conn);
             $projectId = isset($_GET['project_id']) ? (int) $_GET['project_id'] : 0;
@@ -172,6 +194,36 @@
 
             break;
 
+        case 'add_edit_report':
+            $reportService = new ReportService($conn);
+            $projectService = new ProjectService($conn);
+            $userService = new UserService($conn);
+
+            $result['users'] = $userService->getAllUsers( null, true);
+            $result['projects'] = $projectService->getAllProjectsWithTags();
+            //$result['report'] = $reportService->getReportById($_GET['report_id'] ?? null);
+            $result['customers'] = $reportService->getAllCustomers();
+
+            //$result['projects_with_tags'] = $projectService->getAllProjectsWithTags();
+            // code for add/edit report form display
+            break;
+
+        case 'add_edit_report_submit':
+            $reportService = new ReportService($conn);
+            $result = $reportService->saveDailyReport($_POST, $_SESSION['user_id'] ?? 0);
+
+             /* if ($result['success']) {
+                $reportSuccess = $result['message'];
+                $action = 'dashboard';
+            } else {
+                $reportError = $result['message'];
+                $action = 'add_edit_report';
+            } */
+            // code for handling add/edit report form submission
+            print_r($result);
+            $action = 'add_edit_report';
+            break;
+
         default:
             $action = 'dashboard';
     }
@@ -180,5 +232,5 @@
     //print_r($result);
 
     $_SESSION['action'] = $action;
-    print_r($_SESSION);
+    //print_r($_SESSION);
 ?>

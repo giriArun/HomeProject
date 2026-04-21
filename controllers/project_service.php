@@ -12,7 +12,7 @@ final class ProjectService
 
     public function getAllProjects(?bool $is_active = true): array
     {
-        $sql = 'SELECT project_id, project_name, project_detail, project_start_year, project_end_year, is_active, created_by, created, modified_by, modified
+        $sql = 'SELECT project_id, project_name, project_detail, project_start_year, project_end_year, is_active, project_tags, created_by, created, modified_by, modified
                 FROM projects';
 
         $types = '';
@@ -41,6 +41,56 @@ final class ProjectService
         mysqli_stmt_close($statement);
 
         return $projects ?: [];
+    }
+
+    public function getAllProjectsWithTags(): array
+    {
+        $projects = $this->getAllProjects();
+        $tempProjects = [];
+
+        foreach ($projects as $project) {
+            $tempProject = $project;
+            if (!empty($project['project_tags'])) {
+                $tempProject['recent_tags'] = $this->getRecentTags($project['project_tags'], (int) ($project['project_id'] ?? 0));
+
+                if (empty($tempProject['recent_tags'])) {
+                    $tempProject['other_tags'] = $project['project_tags'];
+                } else {
+                    $existingTagNames = array_column($tempProject['recent_tags'], 'tag_name');
+                    $otherTags = array_diff(array_map('trim', explode(',', $project['project_tags'])), $existingTagNames);
+                    $tempProject['other_tags'] = implode(', ', $otherTags);
+                }
+            } else {
+                $tempProject['recent_tags'] = [];
+            }
+
+            $tempProjects[] = $tempProject;
+        }
+
+        return $tempProjects ?: [];
+    }
+
+    private function getRecentTags(string $tags, int $project_id): ?array
+    {
+        $tagArray = array_map('trim', explode(',', $tags));
+        if (empty($tagArray)) {
+            return [];
+        }
+        // Escape tags for SQL (since these come from DB, not user input, this is safe)
+        $tagList = implode(",", array_map(fn($t) => "'" . $this->connection->real_escape_string($t) . "'", $tagArray));
+        $sql = "SELECT tag_name, COUNT(*) as tag_count 
+        FROM projects_tag_logs 
+        WHERE project_id = $project_id AND tag_name IN ($tagList) 
+        GROUP BY tag_name
+        ORDER BY COUNT(1) DESC";
+        $result = mysqli_query($this->connection, $sql);
+        if (!$result) {
+            return [];
+        }
+        $tags = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        mysqli_free_result($result);
+        
+        return $tags ?: [];
     }
 
     public function getProjectById(?int $project_id = null): ?array
@@ -301,6 +351,44 @@ final class ProjectService
         return [
             'success' => true,
             'message' => 'Project status updated successfully.',
+        ];
+    }
+
+    public function updateProjectTags(int $project_id, string $project_tags, int $modified_by): array
+    {
+        if ($project_id <= 0) {
+            return [
+                'success' => false,
+                'message' => 'Invalid project id.',
+            ];
+        }
+
+        $project_tags = trim($project_tags);
+        $sql = 'UPDATE projects SET project_tags = ?, modified_by = ? WHERE project_id = ?';
+        $statement = mysqli_prepare($this->connection, $sql);
+
+        if (!$statement) {
+            return [
+                'success' => false,
+                'message' => 'Failed to prepare update tags statement.',
+            ];
+        }
+
+        mysqli_stmt_bind_param($statement, 'sii', $project_tags, $modified_by, $project_id);
+        mysqli_stmt_execute($statement);
+        $affectedRows = mysqli_stmt_affected_rows($statement);
+        mysqli_stmt_close($statement);
+
+        if ($affectedRows < 1) {
+            return [
+                'success' => false,
+                'message' => 'Project not found or tags unchanged.',
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Project tags updated successfully.',
         ];
     }
 

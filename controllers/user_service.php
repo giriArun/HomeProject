@@ -10,7 +10,7 @@ final class UserService
         $this->connection = $connection;
     }
 
-    public function getAllUsers(?string $search = null): array
+    public function getAllUsers(?string $search = null, ?bool $is_user = false): array
     {
         $search = trim((string) $search);
         $sql = 'SELECT user_id, user_name, user_email, is_active, is_admin, created, modified
@@ -24,6 +24,8 @@ final class UserService
             $keyword = '%' . $search . '%';
             $types = 'ss';
             $params = [$keyword, $keyword];
+        } elseif ($is_user) {
+            $sql .= ' WHERE is_admin = 0';
         }
 
         $sql .= ' ORDER BY user_name ASC';
@@ -420,6 +422,40 @@ final class UserService
 
             // Process permissions as needed
             foreach ($project_permissions as $permission) {
+                $permission_key = $permission['key'] ?? null;
+                $permission_values = $permission['value'] ?? [];
+
+                if ($permission_key === null || !is_array($permission_values)) {
+                    continue;
+                }
+
+                $is_access_granted = (isset($formData[$permission_key]) && $formData[$permission_key] === 'on') ? 1 : 0;
+
+                foreach ($permission_values as $single_permission_key) {
+                    // Process the single permission
+                    $result = $this->processSinglePermission($user_id, $single_permission_key, $is_access_granted);
+                    if (!$result['success']) {
+                        return $result;
+                    }
+                }
+            }
+        }
+
+        /* Process daily report permissions */
+        if (isset($formData['daily_report_permission']) && is_string($formData['daily_report_permission'])) {
+
+            $daily_report_permissions = json_decode($formData['daily_report_permission'], true);
+
+            // Validate that the decoded permissions is an array
+            if (!is_array($daily_report_permissions)) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid permissions data.',
+                ];
+            }
+
+            // Process permissions as needed
+            foreach ($daily_report_permissions as $permission) {
                 $permission_key = $permission['key'] ?? null;
                 $permission_values = $permission['value'] ?? [];
 
