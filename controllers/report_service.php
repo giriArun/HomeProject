@@ -10,23 +10,33 @@ final class ReportService
         $this->connection = $connection;
     }
 
-    public function getAllReports(?string $search = null): array
+    public function getRecentReports(?int $report_id = 0): array
     {
+        $search = '';
         $search = trim((string) $search);
-        $sql = 'SELECT report_id, costs, customer_id, project_id, user_id, tags, notes, type, created, modified
-                FROM daily_reports';
+        $sql = '
+            SELECT dr.daily_report_id, dr.price, dr.date, dr.tags, dr.is_credit,
+                c.customer_name, 
+                p.project_name,
+                u.user_name,
+                TIMESTAMPDIFF(MINUTE, dr.modified, now()) AS minute_diff
+            FROM daily_reports AS dr
+            INNER JOIN projects AS p ON dr.project_id = p.project_id
+            LEFT JOIN customers AS c ON dr.customer_id = c.customer_id
+            LEFT JOIN users AS u ON dr.user_id = u.user_id
+            ';
 
         $types = '';
         $params = [];
 
         if ($search !== '') {
-            $sql .= ' WHERE notes LIKE ?';
+            $sql .= ' WHERE dr.notes LIKE ?';
             $keyword = '%' . $search . '%';
             $types = 's';
             $params = [$keyword];
         }
 
-        $sql .= ' ORDER BY created DESC';
+        $sql .= ' ORDER BY dr.modified DESC, dr.created DESC LIMIT 10';
 
         $statement = mysqli_prepare($this->connection, $sql);
         if (!$statement) {
@@ -101,34 +111,21 @@ final class ReportService
              }
              $normalized['customer_id'] = $customer_id; // Update normalized payload with new customer ID
         }
-print_r($payload);
+
         if ($report_id > 0) {
+            print('Updating report ID: ' . $report_id);exit;
             return $this->updateReport($normalized, $payload);
         } else {
-            return $this->createReport($normalized);
+            return $this->createReport($normalized, $user_id);
         }
     }
 
-    private function createCustomer(string $name, string $address, string $phone, int $user_id): ?int
+    private function createReport(array $normalized, int $user_id): array
     {
-        $sql = 'INSERT INTO customers (customer_name, customer_address, customer_phone, created_by) VALUES (?, ?, ?, ?)';
-        $statement = mysqli_prepare($this->connection, $sql);
-        if (!$statement) {
-            return null;
-        }
-
-        mysqli_stmt_bind_param($statement, 'sssi', $name, $address, $phone, $user_id);
-        $success = mysqli_stmt_execute($statement);
-        $customer_id = $success ? mysqli_insert_id($this->connection) : null;
-        mysqli_stmt_close($statement);
-
-        return $customer_id;
-    }
-
-    private function createReport(array $normalized): array
-    {
-        $sql = 'INSERT INTO daily_reports (price, date, customer_id, project_id, user_id)
-                VALUES (?, ?, ?, ?, ?)';
+        $this->setProjectTagLogs($normalized['project_id'], $user_id, $normalized['tags']);
+        
+        $sql = 'INSERT INTO daily_reports (price, date, customer_id, project_id, user_id, tags, notes, created_by, is_credit)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
         $statement = mysqli_prepare($this->connection, $sql);
         if (!$statement) {
@@ -139,14 +136,22 @@ print_r($payload);
             ];
         }
 
-        $tagsJson = $normalized['tags'] ? json_encode($normalized['tags']) : null;
+        $unique_tags = array_unique(array_merge($normalized['tags'], $normalized['other_tags'] ? explode(',', $normalized['other_tags']) : []));
+        $tags = implode(',', $unique_tags);
 
-        mysqli_stmt_bind_param($statement, 'isiii',
+       // $tags = $normalized['tags'] ? implode(',', $normalized['tags']) : '';
+        //$tags = $normalized['other_tags'] ? ($tags ? $tags . ',' : '') . $normalized['other_tags'] : $tags;
+
+        mysqli_stmt_bind_param($statement, 'isiiissii',
             $normalized['price'],
             $normalized['date'],
             $normalized['customer_id'],
             $normalized['project_id'],
-            $normalized['user_id']
+            $normalized['user_id'],
+            $tags,
+            $normalized['notes'],
+            $user_id,
+            $normalized['is_credit']
         );
 
         $success = mysqli_stmt_execute($statement);
@@ -192,7 +197,7 @@ print_r($payload);
             ];
         }
 
-        $tagsJson = $normalized['tags'] ? json_encode($normalized['tags']) : null;
+        $tagsJson = $normalized['tags'] ? implode(',', $normalized['tags']) : null;
 
         mysqli_stmt_bind_param($statement, 'diiisssi',
             $normalized['costs'],
@@ -213,6 +218,37 @@ print_r($payload);
             'message' => $success ? 'Report updated successfully.' : 'Failed to update report.',
             'report_id' => $report_id,
         ];
+    }
+
+    private function createCustomer(string $name, string $address, string $phone, int $user_id): ?int
+    {
+        $sql = 'INSERT INTO customers (customer_name, customer_address, customer_phone, created_by) VALUES (?, ?, ?, ?)';
+        $statement = mysqli_prepare($this->connection, $sql);
+        if (!$statement) {
+            return null;
+        }
+
+        mysqli_stmt_bind_param($statement, 'sssi', $name, $address, $phone, $user_id);
+        $success = mysqli_stmt_execute($statement);
+        $customer_id = $success ? mysqli_insert_id($this->connection) : null;
+        mysqli_stmt_close($statement);
+
+        return $customer_id;
+    }
+
+    private function setProjectTagLogs(int $project_id, int $user_id, array $tags): void
+    {
+        if (!empty($tags)) {
+            $sqlInsert = 'INSERT INTO projects_tag_logs (tag_name, project_id, created_by) VALUES (?, ?, ?)';
+            $stmtInsert = mysqli_prepare($this->connection, $sqlInsert);
+            if ($stmtInsert) {
+                foreach ($tags as $tag) {
+                    mysqli_stmt_bind_param($stmtInsert, 'sii', $tag, $project_id, $user_id);
+                    mysqli_stmt_execute($stmtInsert);
+                }
+                mysqli_stmt_close($stmtInsert);
+            }
+        }
     }
 
     private function normalizePayload(array $payload): array
@@ -246,8 +282,17 @@ print_r($payload);
 
         $user_id = isset($payload['user']) && $payload['user'] !== '' ? (int) $payload['user'] : null;
 
-        $tags = isset($payload['tags']) && is_array($payload['tags']) ? $payload['tags'] : [];
-        $tags = array_filter($tags, fn($tag) => is_numeric($tag) && $tag > 0);
+        $tags_key = 'tags' . $project_id;
+        $tags_array = isset($payload[$tags_key]) && is_array($payload[$tags_key]) ? $payload[$tags_key] : [];
+        $tags = array_filter($tags_array, fn($tag) => strlen($tag) > 0 && $tag > 0);
+
+        if( in_array("-1", $tags_array) > 0 ){
+            $other_tags_key = 'tagName' . $project_id;
+            $other_tags = isset($payload[$other_tags_key]) ? trim((string)$payload[$other_tags_key]) : '';
+        } else {
+            $other_tags = '';
+
+        }
 
         $notes = isset($payload['notes']) ? trim((string) $payload['notes']) : '';
 
@@ -255,14 +300,7 @@ print_r($payload);
         if (!in_array($type, ['1', '0'])) {
             return ['valid' => false, 'message' => 'Invalid action.'];
         }
-        $type = $type === 'receive' ? '1' : '0';
 
-        /*
-        
-            $customer_name = isset($payload['customerName']) ? trim((string) $payload['customerName']) : '';
-            $customer_address = isset($payload['customerAddress']) ? trim((string) $payload['customerAddress']) : '';
-            $customer_phone = isset($payload['customerPhone']) ? trim((string) $payload['customerPhone']) : '';
-        */
         return [
             'valid' => true,
             'report_id' => isset($payload['report_id']) ? (int) $payload['report_id'] : 0,
@@ -275,8 +313,9 @@ print_r($payload);
             'project_id' => $project_id,
             'user_id' => $user_id,
             'tags' => $tags,
+            'other_tags' => $other_tags,
             'notes' => $notes,
-            'type' => $type,
+            'is_credit' => $type === '1' ? 1 : 0,  
         ];
     }
 }

@@ -15,7 +15,7 @@ $isEdit = false;
 $customers = $result['customers'] ?? null;
 $projects = $result['projects'] ?? null;
 $users = $result['users'] ?? null;
-$tags = $result['tags'] ?? null;
+$activities = $result['activities'] ?? null;
 
 ?>
 <style>
@@ -62,9 +62,10 @@ $tags = $result['tags'] ?? null;
             border: 1px dashed rgba(13, 110, 253, 0.22);
             border-radius: 1rem;
         }
-    </style>
+</style>
 
-
+<?php isset($reportSuccess) && print('<div class="alert alert-success" role="alert">' . $reportSuccess . '</div>'); ?>
+<?php isset($reportError) && print('<div class="alert alert-danger" role="alert">' . $reportError . '</div>'); ?>
 <section class="content-grid">
     <article class="card section-panel border-0 mb-4 pt-3 shadow-sm">
         <form class="needs-validation" novalidate method="post" action="?action=add_edit_report_submit">
@@ -88,10 +89,6 @@ $tags = $result['tags'] ?? null;
             </div>
 
             <div class="card-body p-4">
-                <?php if ($message): ?>
-                    <div class="alert alert-info"><?php echo htmlspecialchars($message); ?></div>
-                <?php endif; ?>
-
                 <fieldset class="border rounded-4 p-3 p-md-4 mb-4">
                     <legend class="float-none w-auto px-2 fs-6 fw-semibold text-primary mb-3">Price Details</legend>
                     <div class="row g-3">
@@ -223,7 +220,7 @@ $tags = $result['tags'] ?? null;
                         <?php
                             $project_id = $project['project_id'];
                         ?>
-                        <div class="row g-3" id="projectSection<?= $project_id ?>">
+                        <div class="row g-3 mt-0 d-none" id="projectSection<?= $project_id ?>">
                             <div class="col-12">
                                 <div class="d-flex flex-wrap">
                                     <?php if (isset($project['recent_tags']) && is_array($project['recent_tags'])): ?>
@@ -312,7 +309,6 @@ $tags = $result['tags'] ?? null;
             
         </form>
 
-
     </article>
 
     <article class="card border-0 shadow-sm">
@@ -325,292 +321,31 @@ $tags = $result['tags'] ?? null;
             </div>
 
             <div class="activity-list">
-                <?php foreach ($activities as $activity): ?>
+                <?php foreach ($activities as $activity): 
+                    $title = $activity['price'];
+                    $title .= ' ' . ($activity['is_credit'] ? 'received from [' : 'sent to [') . $activity['project_name'];
+                    $title .= strlen((string)$activity['customer_name']) > 0 ? '/' . $activity['customer_name'] : '';
+                    $title .= strlen((string)$activity['user_name']) > 0 ? '/' . $activity['user_name'] . ']' : ']';
+                    $min = $activity['minute_diff'] ?? 0;
+                    $timeText = $min > 0 ? ($min > 60 ? floor($min / 60) . ' hours ago' : $min . ' minutes ago') : 'Just now';
+                ?>
                     <div class="activity-item">
                         <span class="activity-dot"></span>
                         <div>
-                            <p class="mb-1 fw-semibold"><?= htmlspecialchars($activity['title']) ?></p>
-                            <small class="text-body-secondary"><?= htmlspecialchars($activity['time']) ?></small>
+                            <p class="mb-0 fw-semibold"><i class="bi bi-currency-rupee"></i><?= htmlspecialchars($title) ?></p>
+                            <p class="mb-1 fst-italic"><?= htmlspecialchars($activity['tags']) ?></p>
+                            <small class="text-body-secondary"><?= htmlspecialchars($timeText) ?></small>
                         </div>
                     </div>
                 <?php endforeach; ?>
-            </div>
-
-            <div class="mini-card">
-                <p class="section-label mb-2">Team efficiency</p>
-                <h4>87%</h4>
-                <p class="mb-0 text-body-secondary">Your operations score improved by 6% this week.</p>
             </div>
         </div>
     </article>
 </section>
     
-
-            <!-- <form class="needs-validation" novalidate>
-                <section class="card section-panel border-0 mb-4">
-                    <div class="card-header border-0 p-4 pb-0">
-                        <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center">
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="section-badge bg-primary-subtle text-primary">
-                                    <i class="bi bi-diagram-3"></i>
-                                </span>
-                                <div>
-                                    <h2 class="h4 mb-1">Section A</h2>
-                                    <p class="text-secondary mb-0">Main container for top-level form details and nested sub-sections.</p>
-                                </div>
-                            </div>
-                            <span class="badge text-bg-light border px-3 py-2">Main Container</span>
-                        </div>
-                    </div>
-
-                    <div class="card-body p-4">
-                        <fieldset class="border rounded-4 p-3 p-md-4 mb-4">
-                            <legend class="float-none w-auto px-2 fs-6 fw-semibold text-primary mb-3">Section A Details</legend>
-                            <div class="row g-3">
-                                <div class="col-12 col-md-6">
-                                    <label for="sectionAName" class="form-label">Primary name</label>
-                                    <input type="text" class="form-control" id="sectionAName" placeholder="Enter a name" required>
-                                    <div class="invalid-feedback">Please enter the primary name.</div>
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label for="sectionAEmail" class="form-label">Primary email</label>
-                                    <input type="email" class="form-control" id="sectionAEmail" placeholder="name@example.com" required>
-                                    <div class="invalid-feedback">Please enter a valid email address.</div>
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label for="sectionAType" class="form-label">Category</label>
-                                    <select class="form-select" id="sectionAType" required>
-                                        <option value="" selected disabled>Select a category</option>
-                                        <option>Internal</option>
-                                        <option>External</option>
-                                        <option>Partner</option>
-                                    </select>
-                                    <div class="invalid-feedback">Please choose a category.</div>
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label for="sectionAOwner" class="form-label">Owner / team</label>
-                                    <input type="text" class="form-control" id="sectionAOwner" placeholder="Operations team" required>
-                                    <div class="invalid-feedback">Please enter the owner or team.</div>
-                                </div>
-                                <div class="col-12">
-                                    <label for="sectionANotes" class="form-label">Overview notes</label>
-                                    <textarea class="form-control" id="sectionANotes" rows="4" placeholder="Add context for Section A" required></textarea>
-                                    <div class="invalid-feedback">Please add a short overview.</div>
-                                </div>
-                            </div>
-                        </fieldset>
-
-                        <div class="accordion" id="sectionAAccordion">
-                            <div class="accordion-item border rounded-4 overflow-hidden mb-3">
-                                <h2 class="accordion-header" id="headingB1">
-                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseB1" aria-expanded="true" aria-controls="collapseB1">
-                                        <span class="d-flex align-items-center gap-3">
-                                            <span class="section-badge bg-success-subtle text-success">
-                                                <i class="bi bi-folder2-open"></i>
-                                            </span>
-                                            <span>
-                                                <span class="d-block fw-semibold">Section B1</span>
-                                                <span class="small text-secondary">Contains nested Section C1 and Section C2.</span>
-                                            </span>
-                                        </span>
-                                    </button>
-                                </h2>
-                                <div id="collapseB1" class="accordion-collapse collapse show" aria-labelledby="headingB1" data-bs-parent="#sectionAAccordion">
-                                    <div class="accordion-body p-4">
-                                        <fieldset class="border rounded-4 p-3 p-md-4 mb-4">
-                                            <legend class="float-none w-auto px-2 fs-6 fw-semibold text-success mb-3">Section B1 Details</legend>
-                                            <div class="row g-3">
-                                                <div class="col-12 col-md-6">
-                                                    <label for="sectionB1Title" class="form-label">Section B1 title</label>
-                                                    <input type="text" class="form-control" id="sectionB1Title" placeholder="Enter title" required>
-                                                    <div class="invalid-feedback">Please enter the Section B1 title.</div>
-                                                </div>
-                                                <div class="col-12 col-md-6">
-                                                    <label for="sectionB1Email" class="form-label">Contact email</label>
-                                                    <input type="email" class="form-control" id="sectionB1Email" placeholder="contact@example.com" required>
-                                                    <div class="invalid-feedback">Please enter a valid contact email.</div>
-                                                </div>
-                                                <div class="col-12 col-md-6">
-                                                    <label for="sectionB1Status" class="form-label">Status</label>
-                                                    <select class="form-select" id="sectionB1Status" required>
-                                                        <option value="" selected disabled>Select status</option>
-                                                        <option>Draft</option>
-                                                        <option>Active</option>
-                                                        <option>Archived</option>
-                                                    </select>
-                                                    <div class="invalid-feedback">Please select a status.</div>
-                                                </div>
-                                                <div class="col-12 col-md-6">
-                                                    <label for="sectionB1Lead" class="form-label">Lead person</label>
-                                                    <input type="text" class="form-control" id="sectionB1Lead" placeholder="Lead name" required>
-                                                    <div class="invalid-feedback">Please enter the lead person.</div>
-                                                </div>
-                                                <div class="col-12">
-                                                    <label for="sectionB1Description" class="form-label">Description</label>
-                                                    <textarea class="form-control" id="sectionB1Description" rows="3" placeholder="Describe Section B1" required></textarea>
-                                                    <div class="invalid-feedback">Please add a description.</div>
-                                                </div>
-                                            </div>
-                                        </fieldset>
-
-                                        <div class="row g-4">
-                                            <div class="col-12 col-xl-6">
-                                                <section class="nested-block h-100 p-3 p-md-4 bg-light-subtle">
-                                                    <div class="d-flex align-items-center gap-3 mb-3">
-                                                        <span class="section-badge bg-info-subtle text-info">
-                                                            <i class="bi bi-layers"></i>
-                                                        </span>
-                                                        <div>
-                                                            <h3 class="h5 mb-1">Section C1</h3>
-                                                            <p class="text-secondary mb-0">First nested child section under B1.</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row g-3">
-                                                        <div class="col-12">
-                                                            <label for="sectionC1Name" class="form-label">Text input</label>
-                                                            <input type="text" class="form-control" id="sectionC1Name" placeholder="C1 text value" required>
-                                                            <div class="invalid-feedback">Please enter a value for Section C1.</div>
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <label for="sectionC1Email" class="form-label">Email input</label>
-                                                            <input type="email" class="form-control" id="sectionC1Email" placeholder="c1@example.com" required>
-                                                            <div class="invalid-feedback">Please enter a valid email for Section C1.</div>
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <label for="sectionC1Type" class="form-label">Select dropdown</label>
-                                                            <select class="form-select" id="sectionC1Type" required>
-                                                                <option value="" selected disabled>Select an option</option>
-                                                                <option>Option 1</option>
-                                                                <option>Option 2</option>
-                                                                <option>Option 3</option>
-                                                            </select>
-                                                            <div class="invalid-feedback">Please select an option for Section C1.</div>
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <label for="sectionC1Notes" class="form-label">Textarea</label>
-                                                            <textarea class="form-control" id="sectionC1Notes" rows="4" placeholder="Add notes for Section C1" required></textarea>
-                                                            <div class="invalid-feedback">Please enter notes for Section C1.</div>
-                                                        </div>
-                                                    </div>
-                                                </section>
-                                            </div>
-
-                                            <div class="col-12 col-xl-6">
-                                                <section class="nested-block h-100 p-3 p-md-4 bg-light-subtle">
-                                                    <div class="d-flex align-items-center gap-3 mb-3">
-                                                        <span class="section-badge bg-warning-subtle text-warning">
-                                                            <i class="bi bi-stack"></i>
-                                                        </span>
-                                                        <div>
-                                                            <h3 class="h5 mb-1">Section C2</h3>
-                                                            <p class="text-secondary mb-0">Second nested child section under B1.</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row g-3">
-                                                        <div class="col-12">
-                                                            <label for="sectionC2Name" class="form-label">Text input</label>
-                                                            <input type="text" class="form-control" id="sectionC2Name" placeholder="C2 text value" required>
-                                                            <div class="invalid-feedback">Please enter a value for Section C2.</div>
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <label for="sectionC2Email" class="form-label">Email input</label>
-                                                            <input type="email" class="form-control" id="sectionC2Email" placeholder="c2@example.com" required>
-                                                            <div class="invalid-feedback">Please enter a valid email for Section C2.</div>
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <label for="sectionC2Type" class="form-label">Select dropdown</label>
-                                                            <select class="form-select" id="sectionC2Type" required>
-                                                                <option value="" selected disabled>Select an option</option>
-                                                                <option>Option A</option>
-                                                                <option>Option B</option>
-                                                                <option>Option C</option>
-                                                            </select>
-                                                            <div class="invalid-feedback">Please select an option for Section C2.</div>
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <label for="sectionC2Notes" class="form-label">Textarea</label>
-                                                            <textarea class="form-control" id="sectionC2Notes" rows="4" placeholder="Add notes for Section C2" required></textarea>
-                                                            <div class="invalid-feedback">Please enter notes for Section C2.</div>
-                                                        </div>
-                                                    </div>
-                                                </section>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="accordion-item border rounded-4 overflow-hidden">
-                                <h2 class="accordion-header" id="headingB2">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseB2" aria-expanded="false" aria-controls="collapseB2">
-                                        <span class="d-flex align-items-center gap-3">
-                                            <span class="section-badge bg-danger-subtle text-danger">
-                                                <i class="bi bi-folder"></i>
-                                            </span>
-                                            <span>
-                                                <span class="d-block fw-semibold">Section B2</span>
-                                                <span class="small text-secondary">Independent sibling section inside Section A.</span>
-                                            </span>
-                                        </span>
-                                    </button>
-                                </h2>
-                                <div id="collapseB2" class="accordion-collapse collapse" aria-labelledby="headingB2" data-bs-parent="#sectionAAccordion">
-                                    <div class="accordion-body p-4">
-                                        <fieldset class="border rounded-4 p-3 p-md-4">
-                                            <legend class="float-none w-auto px-2 fs-6 fw-semibold text-danger mb-3">Section B2 Details</legend>
-                                            <div class="row g-3">
-                                                <div class="col-12 col-md-6">
-                                                    <label for="sectionB2Name" class="form-label">Text input</label>
-                                                    <input type="text" class="form-control" id="sectionB2Name" placeholder="Enter a value" required>
-                                                    <div class="invalid-feedback">Please enter a value for Section B2.</div>
-                                                </div>
-                                                <div class="col-12 col-md-6">
-                                                    <label for="sectionB2Email" class="form-label">Email input</label>
-                                                    <input type="email" class="form-control" id="sectionB2Email" placeholder="sectionb2@example.com" required>
-                                                    <div class="invalid-feedback">Please enter a valid email for Section B2.</div>
-                                                </div>
-                                                <div class="col-12 col-md-6">
-                                                    <label for="sectionB2Type" class="form-label">Select dropdown</label>
-                                                    <select class="form-select" id="sectionB2Type" required>
-                                                        <option value="" selected disabled>Select an option</option>
-                                                        <option>General</option>
-                                                        <option>Priority</option>
-                                                        <option>Optional</option>
-                                                    </select>
-                                                    <div class="invalid-feedback">Please choose an option for Section B2.</div>
-                                                </div>
-                                                <div class="col-12 col-md-6">
-                                                    <label for="sectionB2Ref" class="form-label">Reference code</label>
-                                                    <input type="text" class="form-control" id="sectionB2Ref" placeholder="REF-001" required>
-                                                    <div class="invalid-feedback">Please enter the reference code.</div>
-                                                </div>
-                                                <div class="col-12">
-                                                    <label for="sectionB2Notes" class="form-label">Textarea</label>
-                                                    <textarea class="form-control" id="sectionB2Notes" rows="4" placeholder="Add notes for Section B2" required></textarea>
-                                                    <div class="invalid-feedback">Please enter notes for Section B2.</div>
-                                                </div>
-                                            </div>
-                                        </fieldset>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-4 pt-2">
-                            <p class="text-secondary mb-0">All fields in this demo are marked as required to show Bootstrap validation behavior clearly.</p>
-                            <button type="submit" class="btn btn-primary btn-lg px-4">
-                                <i class="bi bi-send-check me-2"></i>
-                                Submit Form
-                            </button>
-                        </div>
-                    </div>
-                </section>
-            </form> -->
-            
-
     
     <script>
-        (() => {
+        document.addEventListener('DOMContentLoaded', () => {
             const forms = document.querySelectorAll('.needs-validation');
 
             Array.from(forms).forEach((form) => {
@@ -623,30 +358,44 @@ $tags = $result['tags'] ?? null;
                     form.classList.add('was-validated');
                 }, false);
             });
-        })();
 
-        // Handle customer radio button changes
-        document.querySelectorAll('input[name="customer"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const newCustomerFields = document.getElementById('newCustomerFields');
-                if (this.value === '-1') {
-                    newCustomerFields.classList.remove('d-none');
-                } else {
-                    newCustomerFields.classList.add('d-none');
-                }
+            // Handle customer radio button changes
+            const newCustomerFields = document.getElementById('newCustomerFields');
+            document.querySelectorAll('input[name="customer"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === '-1') {
+                        newCustomerFields?.classList.remove('d-none');
+                    } else {
+                        newCustomerFields?.classList.add('d-none');
+                    }
+                });
             });
-        });
 
-        // Handle tag checkbox changes for "Other" option
-        document.querySelectorAll('input[type="checkbox"][value="-1"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const targetId = this.getAttribute('data-new-tag');
-                const newTagFields = document.getElementById(targetId);
-                if (this.checked) {
-                    newTagFields.classList.remove('d-none');
-                } else {
-                    newTagFields.classList.add('d-none');
-                }
+            // Handle tag checkbox changes for "Other" option
+            document.querySelectorAll('input[type="checkbox"][value="-1"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const targetId = this.getAttribute('data-new-tag');
+                    const newTagFields = document.getElementById(targetId);
+                    if (this.checked) {
+                        newTagFields?.classList.remove('d-none');
+                    } else {
+                        newTagFields?.classList.add('d-none');
+                    }
+                });
+            });
+
+            // Handle project radio button changes: show only the selected project section
+            document.querySelectorAll('input[name="project"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    document.querySelectorAll('[id^="projectSection"]').forEach(section => {
+                        section.classList.add('d-none');
+                    });
+
+                    const newProjectSection = document.getElementById('projectSection' + this.value);
+                    if (newProjectSection) {
+                        newProjectSection.classList.remove('d-none');
+                    }
+                });
             });
         });
     </script>

@@ -56,7 +56,7 @@ function progressTone(int $progress): string
 
     return 'warning';
 }
-
+    date_default_timezone_set('Asia/Kolkata');
     session_start();
 ?>
 <!DOCTYPE html>

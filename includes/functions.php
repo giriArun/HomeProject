@@ -201,26 +201,30 @@
 
             $result['users'] = $userService->getAllUsers( null, true);
             $result['projects'] = $projectService->getAllProjectsWithTags();
-            //$result['report'] = $reportService->getReportById($_GET['report_id'] ?? null);
             $result['customers'] = $reportService->getAllCustomers();
+            $result['activities'] = $reportService->getRecentReports();
 
-            //$result['projects_with_tags'] = $projectService->getAllProjectsWithTags();
-            // code for add/edit report form display
             break;
 
         case 'add_edit_report_submit':
             $reportService = new ReportService($conn);
+            $projectService = new ProjectService($conn);
+            $userService = new UserService($conn);
+            
             $result = $reportService->saveDailyReport($_POST, $_SESSION['user_id'] ?? 0);
 
-             /* if ($result['success']) {
+             if ($result['success']) {
                 $reportSuccess = $result['message'];
-                $action = 'dashboard';
+
             } else {
                 $reportError = $result['message'];
-                $action = 'add_edit_report';
-            } */
-            // code for handling add/edit report form submission
-            print_r($result);
+            }
+
+            $result['users'] = $userService->getAllUsers( null, true);
+            $result['projects'] = $projectService->getAllProjectsWithTags();
+            $result['customers'] = $reportService->getAllCustomers();
+            $result['activities'] = $reportService->getRecentReports();
+
             $action = 'add_edit_report';
             break;
 
