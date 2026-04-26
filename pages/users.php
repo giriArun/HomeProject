@@ -26,7 +26,7 @@ $editUser = $users[0];
                 </div>
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-outline-dark"><i class="bi bi-upload me-1"></i>Import</button>
-                    <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addEditUserModal">
                         <i class="bi bi-plus-lg me-1"></i>Add User
                     </button>
                 </div>
@@ -59,7 +59,15 @@ $editUser = $users[0];
                                 <td class="text-secondary small"><?= htmlspecialchars((string) ($user['modified'] ?? 'N/A')) ?></td>
                                 <td class="text-end">
                                     <?php if ($user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('add_edit_user', $_SESSION['permissions']) && !$isAdmin)): ?> 
-                                        <button type="button" class="btn btn-sm btn-outline-primary m-1" data-bs-toggle="modal" data-bs-target="#editUserModal">
+                                        <button type="button" 
+                                            class="btn btn-sm btn-outline-primary m-1" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#addEditUserModal" 
+                                            data-user-id="<?= (int) ($user['user_id'] ?? 0) ?>" 
+                                            data-user-name="<?= htmlspecialchars((string) ($user['user_name'] ?? '')) ?>" 
+                                            data-user-email="<?= htmlspecialchars((string) ($user['user_email'] ?? '')) ?>" 
+                                            data-user-is-admin="<?= (int) ($user['is_admin'] ?? 0) ?>" 
+                                            data-user-is-active="<?= (int) ($user['is_active'] ?? 0) ?>">
                                             <i class="bi bi-pencil"></i> Edit
                                         </button>
                                     <?php endif; ?>
@@ -89,112 +97,55 @@ $editUser = $users[0];
     </article>
 </section>
 
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+<div class="modal fade" id="addEditUserModal" tabindex="-1" aria-labelledby="addEditUserModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form>
+            <form method="post" action="?action=add_edit_user_submit" class="needs-validation" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addEditUserModalLabel">Add/Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">User Name</label>
-                            <input type="text" class="form-control" placeholder="Enter user name">
+                            <input type="text" name="user_name" class="form-control" placeholder="Enter user name">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Email Address</label>
-                            <input type="email" class="form-control" placeholder="name@example.com">
+                            <input type="email" name="user_email" class="form-control" placeholder="name@example.com">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Password</label>
-                            <input type="password" class="form-control" placeholder="Enter password">
+                            <input type="password" name="user_password" class="form-control" placeholder="Enter password">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Confirm Password</label>
-                            <input type="password" class="form-control" placeholder="Re-enter password">
+                            <input type="password" name="user_confirm_password" class="form-control" placeholder="Re-enter password">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Role</label>
-                            <select class="form-select">
-                                <option selected>User</option>
-                                <option>Admin</option>
+                            <select class="form-select" name="user_role">
+                                <option value="0" selected>User</option>
+                                <option value="1">Admin</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Status</label>
-                            <select class="form-select">
-                                <option selected>Active</option>
-                                <option>Inactive</option>
+                            <select class="form-select" name="user_status">
+                                <option value="1" selected>Active</option>
+                                <option value="0">Inactive</option>
                             </select>
                         </div>
-                        <div class="col-12">
-                            <label class="form-label">Notes</label>
-                            <textarea class="form-control" rows="3" placeholder="Optional notes for this user"></textarea>
-                        </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-dark">Save User</button>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <input type="hidden" name="user_id" value="0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark">Save User</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">User Name</label>
-                            <input type="text" class="form-control" value="<?= htmlspecialchars((string) ($editUser['user_name'] ?? '')) ?>">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" class="form-control" value="<?= htmlspecialchars((string) ($editUser['user_email'] ?? '')) ?>">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Role</label>
-                            <select class="form-select">
-                                <option <?= ((int) ($editUser['is_admin'] ?? 0) === 0) ? 'selected' : '' ?>>User</option>
-                                <option <?= ((int) ($editUser['is_admin'] ?? 0) === 1) ? 'selected' : '' ?>>Admin</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Status</label>
-                            <select class="form-select">
-                                <option <?= ((int) ($editUser['is_active'] ?? 0) === 1) ? 'selected' : '' ?>>Active</option>
-                                <option <?= ((int) ($editUser['is_active'] ?? 0) === 0) ? 'selected' : '' ?>>Inactive</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">New Password</label>
-                            <input type="password" class="form-control" placeholder="Leave blank to keep current">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Confirm Password</label>
-                            <input type="password" class="form-control" placeholder="Re-enter new password">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Notes</label>
-                            <textarea class="form-control" rows="3" placeholder="Optional notes for this user"></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-dark">Update User</button>
-            </div>
-        </div>
-    </div>
-</div>

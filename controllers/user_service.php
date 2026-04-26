@@ -167,7 +167,7 @@ final class UserService
                 'user_id' => null,
             ];
         }
-
+        
         if ($this->userNameExists($normalized['user_name'], $user_id)) {
             return [
                 'success' => false,
@@ -486,9 +486,10 @@ final class UserService
     {
         $user_name = trim((string) ($payload['user_name'] ?? ''));
         $user_email = trim((string) ($payload['user_email'] ?? ''));
-        $password = (string) ($payload['password'] ?? '');
-        $is_active = isset($payload['is_active']) ? (int) ((bool) $payload['is_active']) : 1;
-        $is_admin = isset($payload['is_admin']) ? (int) ((bool) $payload['is_admin']) : 0;
+        $password = (string) ($payload['user_password'] ?? '');
+        $confirm_password = (string) ($payload['user_confirm_password'] ?? '');
+        $is_active = isset($payload['user_status']) ? (int) ((bool) $payload['user_status']) : 1;
+        $is_admin = isset($payload['user_role']) ? (int) ((bool) $payload['user_role']) : 0;
 
         if ($user_name === '') {
             return ['valid' => false, 'message' => 'User name is required.'];
@@ -506,6 +507,10 @@ final class UserService
                     return ['valid' => false, 'message' => 'Password must be at least 6 characters.'];
                 }
 
+                if ($password !== $confirm_password) {
+                    return ['valid' => false, 'message' => 'Password and confirm password do not match.'];
+                }
+
                 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
             }
         } else {
@@ -515,6 +520,10 @@ final class UserService
 
             if (strlen($password) < 6) {
                 return ['valid' => false, 'message' => 'Password must be at least 6 characters.'];
+            }
+
+            if ($password !== $confirm_password) {
+                return ['valid' => false, 'message' => 'Password and confirm password do not match.'];
             }
 
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);

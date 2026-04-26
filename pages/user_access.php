@@ -93,7 +93,7 @@
                                     <?php
                                         $user_permission = [
                                             ['title' => 'User List', 'key' => 'users', 'value' => ['users']],
-                                            ['title' => 'Edit User', 'key' => 'add_edit_user', 'value' => ['add_edit_user']],
+                                            ['title' => 'Edit User', 'key' => 'add_edit_user', 'value' => ['add_edit_user', 'add_edit_user_submit']],
                                             ['title' => 'Delete User', 'key' => 'user_delete', 'value' => ['user_delete']],
                                             ['title' => 'Edit User Access', 'key' => 'user_access', 'value' => ['user_access', 'user_access_submit']],
                                         ];

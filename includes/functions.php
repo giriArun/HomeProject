@@ -91,10 +91,24 @@
             break;
 
         case 'add_edit_user':
+        case 'add_edit_user_submit':
             $userService = new UserService($conn);
-            $result['user'] = $userService->getUserById($_GET['id'] ?? null);
-            print_r($result);
-            exit;
+            $user_id = isset($_POST['user_id']) ? (int) $_POST['user_id'] : 0;
+
+            if( $user_id > 0){
+                $result = $userService->updateUser($user_id, $_POST);
+            } else {
+                $result = $userService->createUser($_POST);
+            }
+
+            if ($result['success']) {
+                $userSuccess = $result['message'];
+            } else {
+                $userError = $result['message'];
+            }
+            
+            $action = 'users';
+            $result['users'] = $userService->getAllUsers();
             break;
 
         case 'user_access':

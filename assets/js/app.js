@@ -20,6 +20,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Modal: Add/Edit User - populate fields
+    const addEditUserModal = document.getElementById('addEditUserModal');
+    if (addEditUserModal) {
+        addEditUserModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+            const userId = button.getAttribute('data-user-id');
+            const userName = button.getAttribute('data-user-name');
+            const userEmail = button.getAttribute('data-user-email');
+            const userIsAdmin = button.getAttribute('data-user-is-admin');
+            const userIsActive = button.getAttribute('data-user-is-active');
+
+            const form = addEditUserModal.querySelector('form');
+            const hiddenInput = addEditUserModal.querySelector('input[name="user_id"]');
+            const nameInput = addEditUserModal.querySelector('input[name="user_name"]');
+            const emailInput = addEditUserModal.querySelector('input[name="user_email"]');
+            const userRoleSelect = addEditUserModal.querySelector('[name="user_role"]');
+            const userStatusSelect = addEditUserModal.querySelector('[name="user_status"]');
+
+            if (hiddenInput) hiddenInput.value = userId || 0;
+            if (nameInput) nameInput.value = userName || '';
+            if (emailInput) emailInput.value = userEmail || '';
+            if (userRoleSelect) userRoleSelect.value = userIsAdmin || 0;
+            if (userStatusSelect) userStatusSelect.value = userIsActive || 1;
+        });
+    }
+
     const setSidebarState = (isOpen) => {
         if (!sidebar || !toggleButton) {
             return;

@@ -87,24 +87,24 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <form method="post" action="?action=update_project_tags" class="needs-validation" novalidate>
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editTagsModalLabel">Edit Tags</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Tags</label>
-                                <textarea class="form-control" name="project_tags" rows="3" placeholder="Enter tags for this project"></textarea>
-                                <input type="hidden" name="project_id" value="0">
-                                <span class="form-text">Comma separated tags, for example: tag1, tag2, tag3</span>
-                            </div>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTagsModalLabel">Edit Tags</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Tags</label>
+                            <textarea class="form-control" name="project_tags" rows="3" placeholder="Enter tags for this project"></textarea>
+                            <input type="hidden" name="project_id" value="0">
+                            <span class="form-text">Comma separated tags, for example: tag1, tag2, tag3</span>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-dark">Update Tags</button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark">Update Tags</button>
+                </div>
             </form>
         </div>
     </div>
