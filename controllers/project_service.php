@@ -12,7 +12,7 @@ final class ProjectService
 
     public function getAllProjects(?bool $is_active = true): array
     {
-        $sql = 'SELECT project_id, project_name, project_detail, project_start_year, project_end_year, is_active, project_tags, created_by, created, modified_by, modified
+        $sql = 'SELECT project_id, project_name, project_start_year, project_end_year, is_active, project_tags, created_by, created, modified_by, modified
                 FROM projects';
 
         $types = '';
@@ -99,7 +99,7 @@ final class ProjectService
             return null;
         }
 
-        $sql = 'SELECT project_id, project_name, project_detail, project_start_year, project_end_year, is_active, created_by, created, modified_by, modified
+        $sql = 'SELECT project_id, project_name, project_start_year, project_end_year, is_active, created_by, created, modified_by, modified
                 FROM projects
                 WHERE project_id = ?
                 LIMIT 1';
@@ -590,7 +590,6 @@ final class ProjectService
     // Private helper methods
     private function normalizePayload(array $payload, bool $isUpdate): array
     {
-        print_r($payload);
         $project_name = trim((string) ($payload['project_name'] ?? ''));
         $project_detail = trim((string) ($payload['project_detail'] ?? ''));
         $project_status = trim((string) ($payload['project_status'] ?? ''));

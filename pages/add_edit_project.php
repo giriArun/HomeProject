@@ -38,8 +38,8 @@
                             <div class="form-group col-md-6 mb-3">
                                 <label for="project_status">Project Status <span class="text-danger">*</span></label>
                                 <select id="project_status" name="project_status" class="form-control" required>
-                                    <option value="status_change|1" <?=((int) ($project['is_active'] ?? 0) === 1 ? 'selected' : '')?>>Active</option>
-                                    <option value="status_change|0" <?=((int) ($project['is_active'] ?? 0) === 0 ? 'selected' : '')?>>InActive</option>
+                                    <option value="status_change|1" <?=((int) ($project['is_active'] ?? 1) === 1 ? 'selected' : '')?>>Active</option>
+                                    <option value="status_change|0" <?=((int) ($project['is_active'] ?? 1) === 0 ? 'selected' : '')?>>InActive</option>
                                     <option value="renewal|0">Renewal</option>
                                     <option value="cost_update|0">Cost Update</option>
                                     <option value="date_change|0">Date Change</option>
