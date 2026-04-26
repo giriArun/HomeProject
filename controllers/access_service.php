@@ -20,7 +20,7 @@ final class AccessService
         $statement = mysqli_prepare($this->connection, $sql);
 
         if (!$statement) {
-            return null;
+            return [];
         }
 
         mysqli_stmt_bind_param($statement, 'i', $user_id);
@@ -31,7 +31,7 @@ final class AccessService
 
         mysqli_stmt_close($statement);
 
-        return $permissions ?: null;
+        return $permissions ?: [];
     }
 
     public function verifyUserPermissions(int $user_id, string $action): ?string
