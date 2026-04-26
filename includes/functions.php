@@ -58,6 +58,8 @@
                 $_SESSION['user_admin'] = $result['user']['is_admin'];
                 $_SESSION['login_time'] = time();
 
+                $user_is_admin = isset($_SESSION['user_admin']) ? (int) $_SESSION['user_admin'] : 0;
+
                 $accessService = new AccessService($conn);
                 $allPermissions = $accessService->getUserAllPermissions($result['user']['user_id']);
                 $_SESSION['permissions'] = array_column($allPermissions, 'meta_key');
