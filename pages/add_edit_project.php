@@ -1,6 +1,7 @@
 
 <?php
     $project = $result['project'] ?? null;
+    $project_detail = $result['detail'] ?? null;
 ?>
 <?php isset($projectSuccess) && print('<div class="alert alert-success" role="alert">' . $projectSuccess . '</div>'); ?>
 <?php isset($projectError) && print('<div class="alert alert-danger" role="alert">' . $projectError . '</div>'); ?>
@@ -14,12 +15,12 @@
                     </div>
 
                     <form id="projectForm" method="POST" action="?action=add_edit_project_submit" class="needs-validation" novalidate>
-                        <div class="card-body">
+                        <div class="card-body row g-3">
                             <?php if ((int) ($project['project_id'] ?? 0) > 0): ?>
                                 <input type="hidden" name="project_id" value="<?php echo htmlspecialchars($project['project_id']); ?>">
                             <?php endif; ?>
 
-                            <div class="form-group mb-3">
+                            <div class="form-group col-md-6 mb-3">
                                 <label for="project_name">Project Name <span class="text-danger">*</span></label>
                                 <input 
                                     type="text" 
@@ -34,39 +35,55 @@
                                 >
                                 <small class="form-text text-muted">Project name must be 3-255 characters.</small>
                             </div>
-
-                            <div class="form-group mb-3">
-                                <label for="project_start_year">Project Start Year <span class="text-danger">*</span></label>
-                                <input 
-                                    type="number" 
-                                    class="form-control" 
-                                    id="project_start_year" 
-                                    name="project_start_year" 
-                                    placeholder="Enter project start year"
-                                    value="<?= htmlspecialchars((string) ($project['project_start_year'] ?? '')) ?>"
-                                    required
-                                    min="1901"
-                                    max="2155"
-                                    step="1"
-                                >
-                                <small class="form-text text-muted">Project start year must be a 4-digit number.</small>
+                            <div class="form-group col-md-6 mb-3">
+                                <label for="project_status">Project Status <span class="text-danger">*</span></label>
+                                <select id="project_status" name="project_status" class="form-control" required>
+                                    <option value="status_change|1" <?=((int) ($project['is_active'] ?? 0) === 1 ? 'selected' : '')?>>Active</option>
+                                    <option value="status_change|0" <?=((int) ($project['is_active'] ?? 0) === 0 ? 'selected' : '')?>>InActive</option>
+                                    <option value="renewal|0">Renewal</option>
+                                    <option value="cost_update|0">Cost Update</option>
+                                    <option value="date_change|0">Date Change</option>
+                                </select>
+                                <small class="form-text text-muted">Project status must be select.</small>
                             </div>
 
-                            <div class="form-group mb-3">
-                                <label for="project_end_year">Project End Year <span class="text-danger">*</span></label>
+                            <div class="form-group col-md-4 mb-3" id="startYearGroup">
+                                <label for="project_start_date">Project Start Date <span class="text-danger">*</span></label>
+                                <input 
+                                    type="date" 
+                                    class="form-control" 
+                                    id="project_start_date" 
+                                    name="project_start_date" 
+                                    placeholder="Enter project start date"
+                                    value="<?= htmlspecialchars((string) ($project_detail['latest_dates']['start_date'] ?? '')) ?>"
+                                >
+                                <small class="form-text text-muted">Project start date must be a valid date.</small>
+                            </div>
+
+                            <div class="form-group col-md-4 mb-3" id="endYearGroup">
+                                <label for="project_end_date">Project End Date <span class="text-danger">*</span></label>
+                                <input 
+                                    type="date" 
+                                    class="form-control" 
+                                    id="project_end_date" 
+                                    name="project_end_date" 
+                                    placeholder="Enter project end date"
+                                    value="<?= htmlspecialchars((string) ($project_detail['latest_dates']['end_date'] ?? '')) ?>"
+                                >
+                                <small class="form-text text-muted">Project end date must be a valid date.</small>
+                            </div>
+
+                            <div class="form-group col-md-4 mb-3" id="costUpdateGroup">
+                                <label for="project_cost">Price Update <span class="text-danger">*</span></label>
                                 <input 
                                     type="number" 
                                     class="form-control" 
-                                    id="project_end_year" 
-                                    name="project_end_year" 
-                                    placeholder="Enter project end year"
-                                    value="<?= htmlspecialchars((string) ($project['project_end_year'] ?? '')) ?>"
-                                    required
-                                    min="1901"
-                                    max="2155"
-                                    step="1"
+                                    id="project_cost" 
+                                    name="project_cost" 
+                                    placeholder="Enter project cost update"
+                                    value="<?= htmlspecialchars((string) ($project_detail['latest_cost']['new_cost'] ?? '')) ?>"
                                 >
-                                <small class="form-text text-muted">Project end year must be a 4-digit number.</small>
+                                <small class="form-text text-muted">Project cost must be a valid number.</small>
                             </div>
 
                             <div class="form-group mb-3">
@@ -77,25 +94,8 @@
                                     name="project_detail" 
                                     placeholder="Enter project details (optional)"
                                     rows="5"
-                                ><?= htmlspecialchars((string) ($project['project_detail'] ?? '')) ?></textarea>
-                                <small class="form-text text-muted">Add a detailed description of the project.</small>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <div class="custom-control custom-checkbox">
-                                    <input 
-                                        type="checkbox" 
-                                        class="custom-control-input" 
-                                        id="is_active" 
-                                        name="is_active" 
-                                        value="1"
-                                        <?php echo ((int) ($project['is_active'] ?? 0) === 1 ? 'checked' : ''); ?>
-                                    >
-                                    <label class="custom-control-label" for="is_active">
-                                        Active
-                                    </label>
-                                </div>
-                                <small class="form-text text-muted">Check to make this project active.</small>
+                                ></textarea>
+                                <small class="form-text text-muted">Add a detailed description of the project with in 255 characters.</small>
                             </div>
                         </div>
 
@@ -117,12 +117,62 @@
 
 
 <script>
+    function toggleYearFields() {
+        const status = document.getElementById('project_status').value;
+        const startYearGroup = document.getElementById('startYearGroup');
+        const endYearGroup = document.getElementById('endYearGroup');
+        const costUpdateGroup = document.getElementById('costUpdateGroup');
+        const startYearInput = document.getElementById('project_start_date');
+        const endYearInput = document.getElementById('project_end_date');
+        const costUpdateInput = document.getElementById('project_cost');
+        const isDateChange = status.startsWith('date_change');
+        const isRenewal = status.startsWith('renewal');
+        const isCostUpdate = status.startsWith('cost_update');
+        
+        if (isDateChange || isRenewal) {
+            startYearGroup.classList.remove('d-none');
+            endYearGroup.classList.remove('d-none');
+            startYearInput.setAttribute('required', 'required');
+            endYearInput.setAttribute('required', 'required');
+
+            if (isRenewal) {
+                costUpdateGroup.classList.remove('d-none');
+                costUpdateInput.setAttribute('required', 'required');
+            }else {
+                costUpdateGroup.classList.add('d-none');
+                costUpdateInput.removeAttribute('required');
+            }
+        } else if (isCostUpdate) {
+            costUpdateGroup.classList.remove('d-none');
+            costUpdateInput.setAttribute('required', 'required');
+            
+            startYearGroup.classList.add('d-none');
+            endYearGroup.classList.add('d-none');
+            startYearInput.removeAttribute('required');
+            endYearInput.removeAttribute('required');                  
+        } else {
+            startYearGroup.classList.add('d-none');
+            endYearGroup.classList.add('d-none');
+            costUpdateGroup.classList.add('d-none');
+            startYearInput.removeAttribute('required');
+            endYearInput.removeAttribute('required');
+            costUpdateInput.removeAttribute('required');
+        }
+    }
+
+    document.getElementById('project_status').addEventListener('change', toggleYearFields);
+    
+    // Initial check on page load
+    toggleYearFields();
+
     document.getElementById('projectForm').addEventListener('submit', function(e) {
         // Basic client-side validation
         const projectName = document.getElementById('project_name').value.trim();
-        const startYear = document.getElementById('project_start_year').value.trim();
-        const endYear = document.getElementById('project_end_year').value.trim();
-        const yearPattern = /^[0-9]{4}$/;
+        const status = document.getElementById('project_status').value;
+        const isDateChange = status.startsWith('date_change');
+        const isRenewal = status.startsWith('renewal');
+        const startDate = document.getElementById('project_start_date').value.trim();
+        const endDate = document.getElementById('project_end_date').value.trim();
 
         if (projectName.length < 3) {
             e.preventDefault();
@@ -136,22 +186,33 @@
             return false;
         }
 
-        if (!yearPattern.test(startYear)) {
-            e.preventDefault();
-            alert('Project start year must be a 4-digit number.');
-            return false;
-        }
+        if (isDateChange || isRenewal) {
+            if (!startDate) {
+                e.preventDefault();
+                alert('Project start date is required.');
+                return false;
+            }
 
-        if (!yearPattern.test(endYear)) {
-            e.preventDefault();
-            alert('Project end year must be a 4-digit number.');
-            return false;
-        }
+            if (!endDate) {
+                e.preventDefault();
+                alert('Project end date is required.');
+                return false;
+            }
 
-        if (parseInt(endYear, 10) < parseInt(startYear, 10)) {
-            e.preventDefault();
-            alert('Project end year cannot be earlier than the start year.');
-            return false;
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                e.preventDefault();
+                alert('Please enter valid project start and end dates.');
+                return false;
+            }
+
+            if (end < start) {
+                e.preventDefault();
+                alert('Project end date cannot be earlier than the start date.');
+                return false;
+            }
         }
     });
 </script>

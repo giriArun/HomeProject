@@ -126,6 +126,8 @@
         case 'add_edit_project':
             $projectService = new ProjectService($conn);
             $result['project'] = $projectService->getProjectById($_GET['project_id'] ?? null);
+            $result['detail'] = $projectService->getProjectDetailById($_GET['project_id'] ?? null);
+            print_r($result['detail']);
             break;
 
         case 'add_edit_project_submit':
