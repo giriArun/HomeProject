@@ -99,7 +99,7 @@ $activities = $result['activities'] ?? null;
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="dateSectionA" class="form-label">Date <span class="text-danger">*</span></label>
-                            <input type="date" name="date" class="form-control" id="dateSectionA" placeholder="Enter a date" required value="<?php echo htmlspecialchars($report['date'] ?? ''); ?>">
+                            <input type="date" name="date" class="form-control" id="dateSectionA" placeholder="Enter a date" required value="<?php echo htmlspecialchars($report['date'] ?? date('Y-m-d')); ?>">
                             <div class="invalid-feedback">Please enter the date.</div>
                         </div>
                         <div class="col-12">
