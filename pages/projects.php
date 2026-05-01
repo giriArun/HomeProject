@@ -56,10 +56,10 @@
                                         </button>
                                     <?php endif; ?>
 
-                                    <?php if (($user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('user_access', $_SESSION['permissions'])))): ?>
-                                        <!-- <a type="button" class="btn btn-sm btn-outline-primary m-1" href="?action=user_access&user_id=<?= (int) ($user['user_id'] ?? 0) ?>">
+                                    <?php if (($user_is_admin === 1 || (isset($_SESSION['permissions']) && in_array('project_access', $_SESSION['permissions'])))): ?>
+                                        <a type="button" class="btn btn-sm btn-outline-primary m-1" href="?action=project_access&project_id=<?= (int) ($project['project_id'] ?? 0) ?>">
                                             <i class="bi bi-universal-access-circle"></i> Access
-                                        </a> -->
+                                        </a>
                                     <?php endif; ?>
 
                                     <!-- TODO: it is under discussion, is it a good idea to delete a project? may be old history still remain -->

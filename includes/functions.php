@@ -135,14 +135,24 @@
 
         case 'projects':
             $projectService = new ProjectService($conn);
-            $result['projects'] = $projectService->getAllProjects();
+            $result['projects'] = $projectService->getAllProjects($_SESSION['user_id'] ?? 0, $user_is_admin);
 
             break;
 
         case 'add_edit_project':
             $projectService = new ProjectService($conn);
-            $result['project'] = $projectService->getProjectById($_GET['project_id'] ?? null);
-            $result['detail'] = $projectService->getProjectDetailById($_GET['project_id'] ?? null);
+            $temp_project_id = isset($_GET['project_id']) ? (int) $_GET['project_id'] : 0;
+
+            $result['project'] = $projectService->getProjectById($temp_project_id, $_SESSION['user_id'] ?? 0, $user_is_admin);
+
+            if (is_array($result['project']) === false || count($result['project']) == 0) {
+                $result['projects'] = $projectService->getAllProjects($_SESSION['user_id'] ?? 0, $user_is_admin);
+                $projectError = 'Project not found.';
+                $action = 'projects';
+            } else {
+                //$result['detail'] = $projectService->getProjectDetailById($temp_project_id);
+            }
+
             break;
 
         case 'add_edit_project_submit':
@@ -162,7 +172,7 @@
             if ($result['success']) {
                 $projectSuccess = $result['message'];
                 $action = 'projects';
-                $result['projects'] = $projectService->getAllProjects();
+                $result['projects'] = $projectService->getAllProjects($_SESSION['user_id'] ?? 0, $user_is_admin);
             } else {
                 $projectError = $result['message'];
             }
@@ -186,7 +196,27 @@
             }
 
             $action = 'projects';
-            $result['projects'] = $projectService->getAllProjects();
+            $result['projects'] = $projectService->getAllProjects($_SESSION['user_id'] ?? 0, $user_is_admin);
+
+            break;
+
+        case 'project_access':
+            $projectService = new ProjectService($conn);
+            $result['project_access'] = $projectService->getProjectAccess($_GET['project_id'] ?? null);
+            break;
+
+        case 'project_access_submit':
+            $projectService = new ProjectService($conn);
+            $result = $projectService->updateProjectAccess($_POST, $_SESSION['user_id'] ?? 0);
+
+            if ($result['success']) {
+                $projectSuccess = $result['message'];
+            } else {
+                $projectError = $result['message'];
+            }
+
+            $action = 'projects';
+            $result['projects'] = $projectService->getAllProjects($_SESSION['user_id'] ?? 0, $user_is_admin);
 
             break;
 
@@ -207,7 +237,7 @@
             }
 
             $action = 'projects';
-            $result['projects'] = $projectService->getAllProjects();
+            $result['projects'] = $projectService->getAllProjects($_SESSION['user_id'] ?? 0, $user_is_admin);
 
             break;
 
@@ -217,7 +247,7 @@
             $userService = new UserService($conn);
 
             $result['users'] = $userService->getAllUsers( null, true);
-            $result['projects'] = $projectService->getAllProjectsWithTags();
+            $result['projects'] = $projectService->getAllProjectsWithTags($_SESSION['user_id'] ?? 0, $user_is_admin);
             $result['customers'] = $reportService->getAllCustomers();
             $result['activities'] = $reportService->getRecentReports();
 
@@ -238,7 +268,7 @@
             }
 
             $result['users'] = $userService->getAllUsers( null, true);
-            $result['projects'] = $projectService->getAllProjectsWithTags();
+            $result['projects'] = $projectService->getAllProjectsWithTags($_SESSION['user_id'] ?? 0, $user_is_admin);
             $result['customers'] = $reportService->getAllCustomers();
             $result['activities'] = $reportService->getRecentReports();
 

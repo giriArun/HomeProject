@@ -36,7 +36,7 @@ final class ReportService
             $params = [$keyword];
         }
 
-        $sql .= ' ORDER BY dr.modified DESC, dr.created DESC LIMIT 10';
+        $sql .= ' ORDER BY dr.modified DESC, dr.created DESC LIMIT 8';
 
         $statement = mysqli_prepare($this->connection, $sql);
         if (!$statement) {
