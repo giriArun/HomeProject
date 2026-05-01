@@ -10,18 +10,26 @@ final class ProjectService
         $this->connection = $connection;
     }
 
-    public function getAllProjects(?bool $is_active = true): array
+    public function getAllProjects(?int $user_id = 0, ?bool $is_admin = false, ?bool $is_active = true): array
     {
-        $sql = 'SELECT project_id, project_name, project_start_year, project_end_year, is_active, project_tags, created_by, created, modified_by, modified
-                FROM projects';
+        $sql = 'SELECT DISTINCT p.project_id, p.project_name, p.project_start_year, p.project_end_year, p.is_active, p.project_tags
+            FROM projects AS p
+            LEFT JOIN project_users AS pu ON pu.project_id = p.project_id
+            WHERE 1 = 1';
 
         $types = '';
         $params = [];
 
         if ($is_active == true) {
-            $sql .= ' WHERE is_active = ? OR project_end_year >= YEAR(CURDATE())';
+            $sql .= ' AND ( is_active = ? OR project_end_year >= YEAR(CURDATE()) )';
             $types = 'i';
-            $params = [(int) $is_active];
+            $params[] = (int) $is_active;
+        }
+        
+        if ($is_admin == false && $user_id > 0) {
+            $sql .= ' AND pu.user_id = ?';
+            $types .= 'i';
+            $params[] = (int) $user_id;
         }
 
         $sql .= ' ORDER BY project_name ASC';
@@ -43,9 +51,9 @@ final class ProjectService
         return $projects ?: [];
     }
 
-    public function getAllProjectsWithTags(): array
+    public function getAllProjectsWithTags(?int $user_id = 0, ?bool $is_admin = false): array
     {
-        $projects = $this->getAllProjects();
+        $projects = $this->getAllProjects($user_id, $is_admin, true);
         $tempProjects = [];
 
         foreach ($projects as $project) {
@@ -93,15 +101,116 @@ final class ProjectService
         return $tags ?: [];
     }
 
-    public function getProjectById(?int $project_id = null): ?array
+    public function getProjectAccess(int $project_id): ?array
     {
+        $sql = "SELECT u.user_id, u.user_name, u.user_email,
+                    p.project_id, p.project_name, pu.project_users_id,
+                    CASE 
+                        WHEN pu.project_id IS NOT NULL THEN 1
+                        ELSE 0
+                    END AS is_assigned
+                FROM users AS u
+                LEFT JOIN project_users AS pu 
+                    ON pu.user_id = u.user_id 
+                    AND pu.project_id = ?
+                LEFT JOIN projects AS p 
+                    ON p.project_id = ?
+                    AND (p.is_active = 1 OR p.project_end_year >= YEAR(CURDATE()))
+                WHERE u.is_active = 1 
+                AND u.is_admin = 0 
+                ORDER BY u.user_name ASC";
+
+        $statement = mysqli_prepare($this->connection, $sql);
+        if (!$statement) {
+            return [];
+        }
+
+        mysqli_stmt_bind_param($statement, 
+            'ii', 
+            $project_id,
+            $project_id
+        );
+
+        mysqli_stmt_execute($statement);
+        $result = mysqli_stmt_get_result($statement);
+        $projects = $result ? mysqli_fetch_all($result, MYSQLI_ASSOC) : [];
+        mysqli_stmt_close($statement);
+        
+        return $projects ?: [];
+    }
+
+    public function updateProjectAccess(array $payload, int $updated_by): array
+    {
+        $project_id = $payload['project_id'] ?? 0;
+        $usersAccess = $payload['users'] ?? [];
+        $oldAccess = $this->getProjectAccess((int) $project_id);
+
+        foreach ($usersAccess as $userAccess) {
+            $parts = explode('|', $userAccess);
+            if (count($parts) !== 3) {
+                continue; // skip invalid entries
+            }
+
+            [$user_id, $project_users_id, $project_id] = $parts;
+            $user_id = (int) $user_id;
+            $project_users_id = (int) $project_users_id;
+            $project_id = (int) $project_id;
+
+            $assignedUsers = array_filter($oldAccess, function($user) use ($user_id, $project_users_id, $project_id) {
+                return ($user['user_id'] == $user_id && $user['project_users_id'] == $project_users_id && $user['project_id'] == $project_id) ? true : false;
+            });
+
+            if ($project_users_id > 0 && count($assignedUsers) > 0) {
+                // User is already assigned, no action needed
+                $oldAccess = array_diff_key($oldAccess, $assignedUsers);
+                continue;
+            } else {
+                // Assign user to project
+                $sql = 'INSERT INTO project_users (project_id, user_id, created_by)
+                        VALUES (?, ?, ?)';
+                $statement = mysqli_prepare($this->connection, $sql);
+                if ($statement) {
+                    mysqli_stmt_bind_param($statement, 'iii', $project_id, $user_id, $updated_by);
+                    mysqli_stmt_execute($statement);
+                    mysqli_stmt_close($statement);
+                }
+            }
+        }
+
+        foreach ($oldAccess as $user) {
+            $project_users_id = (int) ($user['project_users_id'] ?? 0);
+            if ($project_users_id <= 0) {
+                continue;
+            }
+
+            $sql = 'DELETE FROM project_users WHERE project_users_id = ? AND project_id = ?';
+            $statement = mysqli_prepare($this->connection, $sql);
+            if ($statement) {
+                mysqli_stmt_bind_param($statement, 'ii', $project_users_id, $project_id);
+                mysqli_stmt_execute($statement);
+                mysqli_stmt_close($statement);
+            }
+        }
+        
+        return ['success' => true, 'message' => 'Project access updated successfully.'];
+    }
+
+    public function getProjectById(?int $project_id = 0, ?int $user_id = 0, ?bool $is_admin = false): ?array
+    {
+        $sql_join = '';
+
         if ($project_id <= 0) {
             return null;
         }
 
-        $sql = 'SELECT project_id, project_name, project_start_year, project_end_year, is_active, created_by, created, modified_by, modified
-                FROM projects
-                WHERE project_id = ?
+        if ($is_admin == false && $user_id > 0) {
+            $sql_join = 'INNER JOIN project_users ON p.project_id = project_users.project_id';
+        }
+
+        $sql = 'SELECT DISTINCT p.project_id, p.project_name, p.project_start_year, p.project_end_year, p.is_active
+                FROM projects AS p
+                ' . $sql_join . '
+                WHERE p.project_id = ?
                 LIMIT 1';
 
         $statement = mysqli_prepare($this->connection, $sql);
