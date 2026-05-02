@@ -27,8 +27,9 @@ final class ProjectService
         }
         
         if ($is_admin == false && $user_id > 0) {
-            $sql .= ' AND pu.user_id = ?';
-            $types .= 'i';
+            $sql .= ' AND ( pu.user_id = ? OR p.created_by = ? )';
+            $types .= 'ii';
+            $params[] = (int) $user_id;
             $params[] = (int) $user_id;
         }
 
@@ -198,19 +199,28 @@ final class ProjectService
     public function getProjectById(?int $project_id = 0, ?int $user_id = 0, ?bool $is_admin = false): ?array
     {
         $sql_join = '';
+        $sql_and_condition = '';
+        $types = 'i';
+        $params = [];
+        $params[] = (int) $project_id;
 
         if ($project_id <= 0) {
             return null;
         }
 
         if ($is_admin == false && $user_id > 0) {
-            $sql_join = 'INNER JOIN project_users ON p.project_id = project_users.project_id';
+            $sql_join = 'LEFT JOIN project_users ON p.project_id = project_users.project_id';
+            $sql_and_condition = ' AND ( project_users.user_id = ? OR p.created_by = ? )';
+            $types .= 'ii';
+            $params[] = (int) $user_id;
+            $params[] = (int) $user_id;
         }
 
         $sql = 'SELECT DISTINCT p.project_id, p.project_name, p.project_start_year, p.project_end_year, p.is_active
                 FROM projects AS p
                 ' . $sql_join . '
                 WHERE p.project_id = ?
+                ' . $sql_and_condition . '
                 LIMIT 1';
 
         $statement = mysqli_prepare($this->connection, $sql);
@@ -218,7 +228,7 @@ final class ProjectService
             return null;
         }
 
-        mysqli_stmt_bind_param($statement, 'i', $project_id);
+        mysqli_stmt_bind_param($statement, $types, ...$params);
         mysqli_stmt_execute($statement);
         $result = mysqli_stmt_get_result($statement);
         $project = $result ? mysqli_fetch_assoc($result) : null;
