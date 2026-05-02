@@ -144,15 +144,7 @@
             $temp_project_id = isset($_GET['project_id']) ? (int) $_GET['project_id'] : 0;
 
             $result['project'] = $projectService->getProjectById($temp_project_id, $_SESSION['user_id'] ?? 0, $user_is_admin);
-
-            if (is_array($result['project']) === false || count($result['project']) == 0) {
-                $result['projects'] = $projectService->getAllProjects($_SESSION['user_id'] ?? 0, $user_is_admin);
-                $projectError = 'Project not found.';
-                $action = 'projects';
-            } else {
-                //$result['detail'] = $projectService->getProjectDetailById($temp_project_id);
-            }
-
+print_r($result);
             break;
 
         case 'add_edit_project_submit':
